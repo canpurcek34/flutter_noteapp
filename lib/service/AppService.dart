@@ -1,4 +1,7 @@
+import 'dart:ui';
+
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:intl/date_symbol_data_local.dart';
@@ -144,6 +147,65 @@ class AppService {
       }
     } catch (e) {
       throw Exception(_handleError(e));
+    }
+  }
+}
+
+class ColorService {
+  static final Map<String, Color> colorNames = {
+    "red": Colors.red,
+    "blue": Colors.blue,
+    "green": Colors.green,
+    "yellow": Colors.yellow,
+    "black": Colors.black,
+    "white": Colors.white,
+    "orange": Colors.orange,
+    "grey": Colors.grey,
+    "purple": Colors.purple,
+    "cyan": Colors.cyan,
+  };
+
+  static Color parseColorByName(String? colorName) {
+    if (colorName == null) return Colors.white;
+    return colorNames[colorName.toLowerCase()] ?? Colors.white;
+  }
+
+  static String convertColorToString(Color color) {
+    return colorNames.entries
+        .firstWhere((entry) => entry.value == color,
+        orElse: () => MapEntry('white', Colors.white))
+        .key;
+  }
+
+  static Future<bool> updateColor(
+      String id,
+      Color selectedColor,
+      {String apiUrl = 'https://emrecanpurcek.com.tr/projects/methods/list/color.php'}
+      ) async {
+    try {
+      await initializeDateFormatting('tr_TR', null);
+      final now = DateTime.now();
+      final formattedDate = DateFormat('d MMMM y HH:mm', 'tr_TR').format(now);
+
+      final colorString = convertColorToString(selectedColor);
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'id': id,
+          'date': formattedDate,
+          'color': colorString,
+        }),
+      );
+
+      final data = json.decode(response.body);
+      return data['success'] == 1;
+    } catch (e) {
+      print('Color update error: $e');
+      return false;
     }
   }
 }

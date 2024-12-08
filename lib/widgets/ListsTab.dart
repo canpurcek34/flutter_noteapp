@@ -8,6 +8,7 @@ class ListsTab extends StatelessWidget {
   final Function(String id) onDelete;
   final Function(String id) onEdit;
   final Function(String id, bool value) onChanged;
+  final Function(String id, Color color) onColorChanged;
   final int crossCount;
   bool isChecked;
 
@@ -18,7 +19,7 @@ class ListsTab extends StatelessWidget {
     required this.onEdit,
     required this.crossCount,
     required this.onChanged,
-    required this.isChecked,
+    required this.isChecked, required this.onColorChanged,
   });
 
   Map<String, Color> colorNames = {
@@ -61,8 +62,8 @@ class ListsTab extends StatelessWidget {
           onDelete: onDelete,
           onCheckboxChanged: onChanged,
           onEdit: onEdit,
-          cardColor:
-              color, //burada diğer metodlar gibi yapmayacağız; çünkü renk verisini işleyip widgetlerde kullanılır hale getirmeliyiz.
+          cardColor:color,
+          colorPicker: onColorChanged //burada diğer metodlar gibi yapmayacağız; çünkü renk verisini işleyip widgetlerde kullanılır hale getirmeliyiz.
         );
       },
     );

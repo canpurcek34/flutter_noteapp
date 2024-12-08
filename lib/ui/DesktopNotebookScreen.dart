@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import '../service/AppService.dart';
@@ -8,6 +9,8 @@ import 'AddListScreen.dart';
 import 'AddNoteScreen.dart';
 import 'EditListScreen.dart';
 import 'EditNoteScreen.dart';
+
+
 
 class DesktopNotebookScreen extends StatefulWidget {
   @override
@@ -19,12 +22,12 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
   final AppService _appService = AppService();
   List<dynamic> _notes = [];
   List<dynamic> _lists = [];
-  List<dynamic> _colors = [];
   late TabController _tabController;
   bool isLoading = true;
   bool isChecked = false;
+  String? formattedDate;
   final RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+  RefreshController(initialRefresh: false);
 
   @override
   void initState() {
@@ -109,7 +112,9 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
                   ),
                 );
                 if (result == true) fetchNotes();
-              },
+              }, onColorChanged: (String id, Color color) {
+              showColorPicker(id, color);
+            },
             ),
             ListsTab(
               lists: _lists,
@@ -130,7 +135,9 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
                 setState(() {
                   updateCheckbox(id, value);
                 });
-              },
+              }, onColorChanged: (String id, Color color) {
+              showColorPicker(id, color);
+            },
             ),
           ],
         ),
@@ -159,7 +166,6 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
         "blue": Colors.blue,
         "green": Colors.green,
         "yellow": Colors.yellow,
-        "black": Colors.black,
         "white": Colors.white,
         "orange": Colors.orange,
         "grey": Colors.grey,
@@ -237,5 +243,62 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
     } catch (e) {
       _refreshController.refreshFailed();
     }
+  }
+  void showColorPicker(String id, Color currentColor) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        Color selectedColor = currentColor;
+
+        return AlertDialog(
+          title: const Text('Bir renk seçin'),
+          content: SingleChildScrollView(
+            child: BlockPicker(
+              pickerColor: selectedColor,
+              availableColors: [
+                Colors.red,
+                Colors.blue,
+                Colors.green,
+                Colors.yellow,
+                Colors.black,
+                Colors.white,
+                Colors.orange,
+                Colors.grey,
+                Colors.purple,
+                Colors.cyan,
+              ],
+              onColorChanged: (Color color) {
+                setState(() {
+                  selectedColor = color;
+                });
+              },
+            ),
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('İptal'),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+            TextButton(
+              child: const Text('Tamam'),
+              onPressed: () async {
+                bool success = await ColorService.updateColor(id, selectedColor);
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Renk başarıyla güncellendi')),
+                  );
+                  fetchLists(); // Refresh lists to show updated color
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Renk güncellenemedi')),
+                  );
+                }
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 }

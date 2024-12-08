@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
 enum SampleItem { itemOne, itemTwo }
 
@@ -8,6 +7,7 @@ class ListCard extends StatelessWidget {
   final String listItem;
   final Color cardColor;
   final Function(String) onEdit;
+  final Function(String, Color) colorPicker;
   final Function(String) onDelete; // Silme işlemi için callback
   final Function(String, bool)
       onCheckboxChanged; // Checkbox durumu değiştiğinde çağrılır
@@ -21,7 +21,7 @@ class ListCard extends StatelessWidget {
     required this.isChecked,
     required this.cardColor,
     super.key,
-    required this.onEdit,
+    required this.onEdit, required this.colorPicker,
   });
 
   @override
@@ -38,7 +38,7 @@ class ListCard extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 color:
-                    Colors.grey.withOpacity(0.5), // Gölgenin rengi ve opaklığı
+                Colors.grey.withOpacity(0.5), // Gölgenin rengi ve opaklığı
                 spreadRadius: 1, // Gölgenin yayılma miktarı
                 blurRadius: 5, // Gölgenin bulanıklık derecesi
                 offset: const Offset(0, 3), // Gölgenin konumu (x, y)
@@ -74,11 +74,11 @@ class ListCard extends StatelessWidget {
                   if (value == SampleItem.itemOne) {
                     onDelete(id); // Silme işlemi için callback
                   } else if (value == SampleItem.itemTwo) {
-                    _showColorPicker(context); // Renk seçimi için callback
+                    colorPicker(id, cardColor); // Renk seçimi için callback
                   }
                 },
                 itemBuilder: (BuildContext context) =>
-                    <PopupMenuEntry<SampleItem>>[
+                <PopupMenuEntry<SampleItem>>[
                   const PopupMenuItem<SampleItem>(
                     value: SampleItem.itemOne,
                     child: Text('Delete'),
@@ -93,42 +93,6 @@ class ListCard extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  void _showColorPicker(BuildContext context) {
-    Color selectedColor = cardColor; // Varsayılan olarak mevcut kart rengi
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Bir renk seçin'),
-          content: SingleChildScrollView(
-            child: BlockPicker(
-              pickerColor: selectedColor,
-              onColorChanged: (Color color) {
-                selectedColor = color; // Seçilen renk güncelleniyor
-              },
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Diyalog kapatılıyor
-              },
-              child: const Text('İptal'),
-            ),
-            TextButton(
-              onPressed: () {
-                // Renk değişikliği işlemini burada uygulayın
-                Navigator.of(context).pop(); // Diyalog kapatılıyor
-              },
-              child: const Text('Tamam'),
-            ),
-          ],
-        );
-      },
     );
   }
 }

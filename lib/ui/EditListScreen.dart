@@ -39,8 +39,7 @@ class _EditListScreenState extends State<EditListScreen> {
       body: jsonEncode({
         'id': widget.list['id'].toString(),
         'list': _listController.text,
-        'date': formattedDate ?? now.toString(),
-        'color': "",
+        'date': formattedDate ?? now.toString()
       }),
     );
 

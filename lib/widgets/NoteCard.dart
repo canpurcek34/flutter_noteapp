@@ -9,6 +9,7 @@ class NoteCard extends StatelessWidget {
   final String note;
   final String dateTime;
   final Color cardColor;
+  final Function(String, Color) colorPicker;
   final Function(String) onDelete; // Silme işlemi için callback
   final Function(String) onEdit; // Düzenleme işlemi için callback
   //final Function(String, Color) onColorChange; // Renk değiştirme callback
@@ -22,7 +23,7 @@ class NoteCard extends StatelessWidget {
     required this.onEdit, // Düzenleme işlemi için callback'i al
     //required this.onColorChange, // Renk değiştirme callback'i al
     required this.cardColor,
-    super.key,
+    super.key, required this.colorPicker,
   });
 
   @override
@@ -71,7 +72,7 @@ class NoteCard extends StatelessWidget {
                       if (value == SampleItem.itemOne) {
                         onDelete(id); // Silme işlemi için callback
                       } else if (value == SampleItem.itemTwo) {
-                        _showColorPicker(context); // Renk seçimi başlatılıyor
+                        colorPicker(id, cardColor); // Renk seçimi başlatılıyor
                       }
                     },
                     itemBuilder: (BuildContext context) =>
@@ -116,42 +117,6 @@ class NoteCard extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-
-  void _showColorPicker(BuildContext context) {
-    Color selectedColor = cardColor; // Varsayılan olarak mevcut kart rengi
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Bir renk seçin'),
-          content: SingleChildScrollView(
-            child: BlockPicker(
-              pickerColor: selectedColor,
-              onColorChanged: (Color color) {
-                selectedColor = color; // Seçilen renk güncelleniyor
-              },
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Diyalog kapatılıyor
-              },
-              child: const Text('İptal'),
-            ),
-            TextButton(
-              onPressed: () {
-                //onColorChange(id, selectedColor); // Renk değiştirme callback'i
-                Navigator.of(context).pop(); // Diyalog kapatılıyor
-              },
-              child: const Text('Tamam'),
-            ),
-          ],
-        );
-      },
     );
   }
 }

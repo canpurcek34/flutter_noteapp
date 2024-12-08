@@ -7,15 +7,18 @@ class NotesTab extends StatelessWidget {
   final Function(String id) onDelete;
   final Function(String id) onEdit;
   final int crossCount;
+  final Function(String id, Color color) onColorChanged;
+
 
   NotesTab(
       {super.key,
       required this.notes,
       required this.onDelete,
       required this.onEdit,
-      required this.crossCount});
+      required this.crossCount, required this.onColorChanged});
 
   Map<String, Color> colorNames = {
+    //renk keyleri ve renk valuelerinden oluşan bir map yaptık
     "red": Colors.red,
     "blue": Colors.blue,
     "green": Colors.green,
@@ -28,6 +31,7 @@ class NotesTab extends StatelessWidget {
     "cyan": Colors.cyan,
   };
 
+  //burada da bu keyler girildiğinde karşılığındaki renk valuesini veren/döndüren/return eden bir mapper var
   Color parseColorByName(String colorName) {
     return colorNames[colorName.toLowerCase()] ??
         Colors.transparent; // Bulamazsa şeffaf döner
@@ -53,6 +57,7 @@ class NotesTab extends StatelessWidget {
           onDelete: onDelete,
           onEdit: onEdit,
           cardColor: color,
+          colorPicker: onColorChanged,
         );
       },
     );

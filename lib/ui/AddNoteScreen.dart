@@ -49,6 +49,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
         'title': _title,
         'note': _note,
         'type': type,
+        'color': "white",
         'date': _formattedDate ??
             DateTime.now().toString(), // Formatlanmış tarihi gönderiyoruz
       }),

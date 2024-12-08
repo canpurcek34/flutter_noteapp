@@ -46,7 +46,7 @@ class _AddListScreenState extends State<AddListScreen> {
       body: jsonEncode(<String, String>{
         'uuid': uid,
         'list': _list,
-        'color': "null",
+        'color': "white",
         'isChecked': "0",
         'type': type,
         'date': _formattedDate ??
