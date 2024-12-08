@@ -34,15 +34,18 @@ class ListCard extends StatelessWidget {
         margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         decoration: BoxDecoration(
             color: cardColor,
+            border: Border.all(
+              color: Colors.grey
+            ),
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
-              BoxShadow(
+              /*BoxShadow(
                 color:
                 Colors.grey.withOpacity(0.5), // Gölgenin rengi ve opaklığı
                 spreadRadius: 1, // Gölgenin yayılma miktarı
                 blurRadius: 5, // Gölgenin bulanıklık derecesi
                 offset: const Offset(0, 3), // Gölgenin konumu (x, y)
-              ),
+              ),*/
             ]),
         child: Padding(
           padding: const EdgeInsets.all(6.0),
