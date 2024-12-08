@@ -106,7 +106,7 @@ class NoteCard extends StatelessWidget {
               Text(
                 dateTime,
                 style: const TextStyle(
-                  color: Colors.orangeAccent,
+                  color: Colors.black,
                   fontSize: 14,
                   fontWeight: FontWeight.normal,
                 ),
