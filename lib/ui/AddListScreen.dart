@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/date_symbol_data_local.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // DateFormat için
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AddListScreen extends StatefulWidget {
   const AddListScreen({super.key});
@@ -15,23 +15,25 @@ class AddListScreen extends StatefulWidget {
 
 class _AddListScreenState extends State<AddListScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _list = '';
-  String? _formattedDate; // Formatlanmış tarih
+  final _listController = TextEditingController();
+  String? _formattedDate;
   bool isDarkMode = false;
 
   @override
   void initState() {
     super.initState();
+    _loadThemePreference();
+    _initializeDateFormat();
+  }
 
-    // Tarih formatını başlatıyoruz ve ardından formatlı tarihi alıyoruz
+  void _initializeDateFormat() {
     initializeDateFormatting('tr_TR', null).then((_) {
       setState(() {
-        DateTime now = DateTime.now();
-        _formattedDate = DateFormat.yMMMMd('tr_TR').add_jm().format(now);
+        _formattedDate = DateFormat.yMMMMd('tr_TR').add_jm().format(DateTime.now());
       });
     });
   }
-    // Theme preference yükleme metodu
+
   Future<void> _loadThemePreference() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -39,13 +41,11 @@ class _AddListScreenState extends State<AddListScreen> {
     });
   }
 
-  // Theme preference kaydetme metodu
   Future<void> _saveThemePreference(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isDarkMode', value);
   }
 
-  // Theme değiştirme metodu
   void _toggleTheme() {
     setState(() {
       isDarkMode = !isDarkMode;
@@ -54,43 +54,60 @@ class _AddListScreenState extends State<AddListScreen> {
   }
 
   Future<void> addList() async {
-    final user =
-        FirebaseAuth.instance.currentUser; // Firebase'den kullanıcı bilgisi al
+    final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
-      throw Exception("Kullanıcı oturumu yok");
+      _showErrorDialog("Kullanıcı oturumu yok");
+      return;
     }
-    final uid = user.uid; // UUID'yi al
-    const type = "list";
 
-    final response = await http.post(
-      Uri.parse(
-          'https://emrecanpurcek.com.tr/projects/methods/list/insert.php'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'uuid': uid,
-        'list': _list,
-        'color': "white",
-        'isChecked': "0",
-        'type': type,
-        'date': _formattedDate ??
-            DateTime.now().toString(), // Formatlanmış tarihi gönderiyoruz
-      }),
+    try {
+      final response = await http.post(
+        Uri.parse('https://emrecanpurcek.com.tr/projects/methods/list/insert.php'),
+        headers: <String, String>{
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode(<String, String>{
+          'uuid': user.uid,
+          'list': _listController.text,
+          'color': "white",
+          'isChecked': "0",
+          'type': "list",
+          'date': _formattedDate ?? DateTime.now().toString(),
+        }),
+      );
+
+      final Map<String, dynamic> responseData = json.decode(response.body);
+
+      if (responseData['success'] == 1) {
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Liste başarıyla eklendi'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      } else {
+        _showErrorDialog(responseData['message'] ?? 'Bir hata oluştu');
+      }
+    } catch (e) {
+      _showErrorDialog('Bağlantı hatası: ${e.toString()}');
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hata'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Tamam'),
+          ),
+        ],
+      ),
     );
-
-    final Map<String, dynamic> responseData = json.decode(response.body);
-
-    if (responseData['success'] == 1) {
-      Navigator.pop(
-          context, true); // Başarılı olursa geri dön ve listeyi yenile
-      print("Yeni veri girişi başarılı.");
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(responseData['message'] ?? 'Bir hata oluştu'),
-          behavior: SnackBarBehavior.floating));
-      print("Yeni veri girişi başarısız.");
-    }
   }
 
   @override
@@ -98,23 +115,57 @@ class _AddListScreenState extends State<AddListScreen> {
     return Theme(
       data: isDarkMode 
         ? ThemeData.dark().copyWith(
-            primaryColor: Colors.cyan,
-            scaffoldBackgroundColor: Colors.grey[900],
-            appBarTheme: AppBarTheme(
-              backgroundColor: Colors.grey[850],
+            colorScheme: ColorScheme.dark(
+              primary: Colors.cyan,
+              secondary: Colors.cyanAccent,
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.cyan.shade200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.cyan.shade400, width: 2),
+              ),
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.cyan.shade700,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
           )
         : ThemeData.light().copyWith(
-            primaryColor: Colors.cyan,
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Colors.cyan,
+            colorScheme: ColorScheme.light(
+              primary: Colors.cyan,
+              secondary: Colors.cyanAccent,
+            ),
+            inputDecorationTheme: InputDecorationTheme(
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.cyan.shade200),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(color: Colors.cyan.shade400, width: 2),
+              ),
+            ),
+            elevatedButtonTheme: ElevatedButtonThemeData(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.cyan,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
             ),
           ),
-      child:
-        Scaffold(
-          appBar: AppBar(
-            title: const Text('Yeni Liste Ekle'),
-            actions: [
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('Yeni Liste Ekle'),
+          actions: [
             Row(
               children: [
                 Text(
@@ -133,62 +184,62 @@ class _AddListScreenState extends State<AddListScreen> {
               ],
             ),
             const SizedBox(width: 10),
-          ]
-          ),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.8),
-                          spreadRadius: 2,
-                          blurRadius: 5,
-                          offset: const Offset(0, 3), // Gölgenin konumu
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: TextFormField(
-                        decoration: const InputDecoration(
-                          labelText: 'Liste',
-                          border: InputBorder.none,
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Öğe giriniz';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          _list = value!;
-                        },
-                      ),
+          ],
+        ),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextFormField(
+                  controller: _listController,
+                  decoration: InputDecoration(
+                    labelText: 'Liste',
+                    prefixIcon: const Icon(Icons.list),
+                    hintText: 'Liste içeriğini girin',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _formKey.currentState!.save();
-                        addList();
-                      }
-                    },
-                    child: const Text('Kaydet'),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Öğe giriniz';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 24),
+                ElevatedButton.icon(
+                  onPressed: () {
+                    if (_formKey.currentState!.validate()) {
+                      _formKey.currentState!.save();
+                      addList();
+                    }
+                  },
+                  icon: const Icon(Icons.save),
+                  label: const Text('Kaydet'),
+                  style: ElevatedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    foregroundColor: isDarkMode ? Colors.white : Colors.black87,
+                    backgroundColor: Colors.cyan,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ),
+      ),
     );
+  }
+
+  @override
+  void dispose() {
+    _listController.dispose();
+    super.dispose();
   }
 }

@@ -19,7 +19,10 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
   final _noteController = TextEditingController();
   late String _date;
   String? formattedDate;
-  bool isDarkMode = false;
+  bool _isDarkMode = false;
+  bool _isLoading = false;
+  String selectedMode = "Açık Mod";
+
 
   @override
   void initState() {
@@ -27,12 +30,14 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
     _titleController.text = widget.note['title'] ?? '';
     _noteController.text = widget.note['note'] ?? '';
     _date = widget.note['date'] ?? '';
+    _loadThemePreference();
   }
     // Theme preference yükleme metodu
   Future<void> _loadThemePreference() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      isDarkMode = prefs.getBool('isDarkMode') ?? false;
+      _isDarkMode = prefs.getBool('isDarkMode') ?? false;
+      selectedMode = _isDarkMode ? "Açık Mod" : "Koyu Mod";
     });
   }
 
@@ -45,8 +50,9 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
   // Theme değiştirme metodu
   void _toggleTheme() {
     setState(() {
-      isDarkMode = !isDarkMode;
-      _saveThemePreference(isDarkMode);
+      _isDarkMode = !_isDarkMode;
+      _saveThemePreference(_isDarkMode);
+      selectedMode = _isDarkMode ? "Açık Mod" : "Koyu Mod";
     });
   }
 
@@ -94,157 +100,145 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
       );
     }
   }
+  // Material Design Color Palette
+  ColorScheme _getColorScheme(bool isDarkMode) {
+    return isDarkMode 
+      ? ColorScheme.dark(
+          primary: Colors.cyan.shade300,
+          secondary: Colors.cyanAccent.shade200,
+          surface: Colors.grey.shade800,
+          background: Colors.grey.shade900,
+        )
+      : ColorScheme.light(
+          primary: Colors.cyan,
+          secondary: Colors.cyanAccent,
+          surface: Colors.white,
+          background: Colors.white,
+        );
+  }
 
-  @override
+   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: isDarkMode 
-        ? ThemeData.dark().copyWith(
-            primaryColor: Colors.cyan,
-            scaffoldBackgroundColor: Colors.grey[900],
-            appBarTheme: AppBarTheme(
-              backgroundColor: Colors.grey[850],
-            ),
-          )
-        : ThemeData.light().copyWith(
-            primaryColor: Colors.cyan,
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Colors.cyan,
-            ),
+    final colorScheme = _getColorScheme(_isDarkMode);
+
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: colorScheme,
+        brightness: _isDarkMode ? Brightness.dark : Brightness.light,
+        textTheme: TextTheme(
+          bodyMedium: TextStyle(
+            color: colorScheme.onSurface,
           ),
-      child:
-        Scaffold(
-          appBar: AppBar(
-            title: const Text('Düzenle'),
-            actions: [
-            Row(
-              children: [
-                Text(
-                  'Dark Mode', 
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
-                  ),
-                ),
-                Switch(
-                  value: isDarkMode,
-                  onChanged: (_) => _toggleTheme(),
-                  activeColor: Colors.white,
-                  activeTrackColor: Colors.cyan,
-                  inactiveTrackColor: Colors.grey[300],
-                ),
-              ],
-            ),
-            const SizedBox(width: 10),
-          ]
+        ),
+        inputDecorationTheme: InputDecorationTheme(
+          // TextField için stil
+          filled: true,
+          fillColor: colorScheme.surface,
+          labelStyle: TextStyle(color: colorScheme.primary),
+          enabledBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: colorScheme.primary.withOpacity(0.5)),
+            borderRadius: BorderRadius.circular(4),
           ),
-          body: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.5),
-                          spreadRadius: 2,
-                          blurRadius: 5,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: TextField(
-                        controller: _titleController,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          labelStyle: TextStyle(
-                            fontSize: 20.0,
-                            color: Colors.black,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.5),
-                          spreadRadius: 2,
-                          blurRadius: 5,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: TextField(
-                        controller: _noteController,
-                        decoration: const InputDecoration(
-                          border: InputBorder.none,
-                          labelStyle: TextStyle(
-                            fontSize: 20.0,
-                            color: Colors.black,
-                          ),
-                        ),
-                        minLines: 1,
-                        maxLines: null,
-                        expands: false,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Wrap(
-                    spacing: 8.0, // Aralık
-                    runSpacing: 4.0, // Satır arası aralık
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(8),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.5),
-                              spreadRadius: 2,
-                              blurRadius: 5,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 16, vertical: 16),
-                          child: Text(
-                            'Düzenlenme Zamanı: $_date',
-                            style:
-                                const TextStyle(fontSize: 16, color: Colors.black),
-                            softWrap: true,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      updateNote();
-                    },
-                    child: const Text('Kaydet'),
-                  ),
-                ],
-              ),
+          focusedBorder: OutlineInputBorder(
+            borderSide: BorderSide(color: colorScheme.primary, width: 2),
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: colorScheme.primary,
+            foregroundColor: colorScheme.onPrimary,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
             ),
           ),
         ),
+      ),
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text('Düzenle'),
+          actions: [
+            Row(
+              mainAxisSize: MainAxisSize.min, // Gereksiz boşluğu önler
+              children: [
+                Text(
+                  selectedMode,
+                  style: TextStyle(
+                    color: _isDarkMode ? Colors.white70 : Colors.black87,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Switch.adaptive(
+                  // Platformlara duyarlı switch
+                  value: _isDarkMode,
+                  onChanged: (_) => _toggleTheme(),
+                  activeColor: Colors.cyan,
+                ),
+              ],
+            ),
+            const SizedBox(width: 8), // Daha ince boşluk
+          ],
+        ),
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Card(
+                   elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(6.0),
+                  child: TextField(
+                    controller: _titleController,
+                    maxLines: null,
+                    keyboardType: TextInputType.multiline,
+                  ),
+                )),
+                const SizedBox(height: 16),
+                Card(
+                   elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(6.0),
+                  child: TextField(
+                    controller: _noteController,
+                    maxLines: null,
+                    keyboardType: TextInputType.multiline,
+                  ),
+                )),
+                const SizedBox(height: 16),
+                Card(
+                  elevation: 2,
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Text(
+                      'Düzenlenme Zamanı: $_date',
+                      style: TextStyle(
+                        fontSize: 14, 
+                        color: colorScheme.onSurface.withOpacity(0.7),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                ElevatedButton(
+                  onPressed: _isLoading ? null : updateNote,
+                  child: _isLoading 
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text('Kaydet'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

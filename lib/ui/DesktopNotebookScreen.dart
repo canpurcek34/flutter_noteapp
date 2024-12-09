@@ -11,7 +11,6 @@ import 'AddNoteScreen.dart';
 import 'EditListScreen.dart';
 import 'EditNoteScreen.dart';
 
-
 class DesktopNotebookScreen extends StatefulWidget {
   const DesktopNotebookScreen({super.key});
 
@@ -28,10 +27,10 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
   bool isLoading = true;
   bool isChecked = false;
   bool isDarkMode = false;
-  String selectedMode = "Dark Mode";
+  String selectedMode = "Açık Mod";
   String? formattedDate;
   final RefreshController _refreshController =
-  RefreshController(initialRefresh: false);
+      RefreshController(initialRefresh: false);
 
   @override
   void initState() {
@@ -41,30 +40,6 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
     fetchLists();
     _tabController = TabController(length: 2, vsync: this);
   }
-
-  // Theme preference yükleme metodu
-  Future<void> _loadThemePreference() async {
-  final prefs = await SharedPreferences.getInstance();
-  setState(() {
-    isDarkMode = prefs.getBool('isDarkMode') ?? false;
-    selectedMode = isDarkMode ? "Light Mode" : "Dark Mode";
-  });
-}
-
-  // Theme preference kaydetme metodu
-  Future<void> _saveThemePreference(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isDarkMode', value);
-  }
-
-  // Theme değiştirme metodu
-  void _toggleTheme() {
-  setState(() {
-    isDarkMode = !isDarkMode;
-    selectedMode = isDarkMode ? "Light Mode" : "Dark Mode";
-    _saveThemePreference(isDarkMode);
-  });
-}
 
   @override
   void dispose() {
@@ -78,45 +53,72 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
     int crossCount = screenWidth < 600 ? 1 : 4;
 
     return Theme(
-      data: isDarkMode 
-        ? ThemeData.dark().copyWith(
-            primaryColor: Colors.cyan,
-            scaffoldBackgroundColor: Colors.grey[900],
-            appBarTheme: AppBarTheme(
-              backgroundColor: Colors.grey[850],
+      data: isDarkMode
+          ? ThemeData.dark().copyWith(
+              primaryColor: Colors.cyan,
+              scaffoldBackgroundColor: Colors.grey[900],
+              appBarTheme: AppBarTheme(
+                backgroundColor: Colors.grey[850],
+                elevation: 4,
+              ),
+              colorScheme: ColorScheme.dark(
+                primary: Colors.cyan,
+                secondary: Colors.cyanAccent,
+              ),
+              floatingActionButtonTheme: FloatingActionButtonThemeData(
+                backgroundColor: Colors.cyan,
+              ),
+            )
+          : ThemeData.light().copyWith(
+              primaryColor: Colors.cyan,
+              appBarTheme: const AppBarTheme(
+                backgroundColor: Colors.cyan,
+                elevation: 4,
+              ),
+              colorScheme: ColorScheme.light(
+                primary: Colors.cyan,
+                secondary: Colors.cyanAccent,
+              ),
+              floatingActionButtonTheme: FloatingActionButtonThemeData(
+                backgroundColor: Colors.cyan,
+              ),
             ),
-          )
-        : ThemeData.light().copyWith(
-            primaryColor: Colors.cyan,
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Colors.cyan,
-            ),
-          ),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Notebook'),
+          elevation: 4, // Gölge ekleyerek derinlik hissi verir
+          centerTitle: true, // Başlığı ortalayın
+          title: Text(
+            'Notebook',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+          ),
           actions: [
             Row(
+              mainAxisSize: MainAxisSize.min, // Gereksiz boşluğu önler
               children: [
                 Text(
-                  selectedMode, 
+                  selectedMode,
                   style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
+                    color: isDarkMode ? Colors.white70 : Colors.black87,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
-                Switch(
+                Switch.adaptive(
+                  // Platformlara duyarlı switch
                   value: isDarkMode,
                   onChanged: (_) => _toggleTheme(),
-                  activeColor: Colors.white,
-                  activeTrackColor: Colors.cyan,
-                  inactiveTrackColor: Colors.grey[300],
+                  activeColor: Colors.cyan,
                 ),
               ],
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: 8), // Daha ince boşluk
           ],
           bottom: TabBar(
             controller: _tabController,
+            indicatorColor: Colors.white, // Aktif tab için alt çizgi rengi
+            labelColor: Colors.white, // Aktif tab metin rengi
+            unselectedLabelColor: Colors.white70, // Pasif tab metin rengi
             tabs: const [
               Tab(icon: Icon(Icons.note), text: "Notlar"),
               Tab(icon: Icon(Icons.list), text: "Listeler"),
@@ -126,28 +128,39 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
         floatingActionButton: SpeedDial(
           animatedIcon: AnimatedIcons.menu_close,
           backgroundColor: Colors.cyan,
-          overlayOpacity: 0.1,
+          foregroundColor: isDarkMode ? Colors.white : Colors.black87,
+          overlayColor: Colors.black12,
+          overlayOpacity: 0.4,
+          spacing: 10,
           children: [
             SpeedDialChild(
-              child: const Icon(Icons.note_add, color: Colors.white),
+              child: Icon(Icons.note_add, color: isDarkMode ? Colors.white : Colors.black87),
               backgroundColor: Colors.cyan,
               label: 'Yeni Not Ekle',
+              labelStyle: TextStyle(
+                color: isDarkMode ? Colors.black87 : Colors.black87,
+              ),
               onTap: () async {
                 final result = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AddNoteScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const AddNoteScreen()),
                 );
                 if (result == true) fetchNotes();
               },
             ),
             SpeedDialChild(
-              child: const Icon(Icons.list, color: Colors.white),
+              child: Icon(Icons.list, color: isDarkMode ? Colors.white : Colors.black87),
               backgroundColor: Colors.cyan,
               label: 'Yeni Liste Ekle',
+              labelStyle: TextStyle(
+                color: isDarkMode ? Colors.black87 : Colors.black87,
+              ),
               onTap: () async {
                 final result = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const AddListScreen()),
+                  MaterialPageRoute(
+                      builder: (context) => const AddListScreen()),
                 );
                 if (result == true) fetchLists();
               },
@@ -168,7 +181,8 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
                 notes: _notes,
                 onDelete: deleteNote,
                 onEdit: (id) async {
-                  final note = _notes.firstWhere((n) => n['id'].toString() == id);
+                  final note =
+                      _notes.firstWhere((n) => n['id'].toString() == id);
                   final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -176,16 +190,18 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
                     ),
                   );
                   if (result == true) fetchNotes();
-                }, onColorChanged: (String id, Color color) { 
+                },
+                onColorChanged: (String id, Color color) {
                   showColorPicker(id, color);
-                 },
+                },
               ),
               ListsTab(
                 lists: _lists,
                 onDelete: deleteList,
                 isChecked: isChecked,
                 onEdit: (id) async {
-                  final list = _lists.firstWhere((n) => n['id'].toString() == id);
+                  final list =
+                      _lists.firstWhere((n) => n['id'].toString() == id);
                   final result = await Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -199,9 +215,10 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
                   setState(() {
                     updateCheckbox(id, value);
                   });
-                }, onColorChanged: (String id, Color color) { 
+                },
+                onColorChanged: (String id, Color color) {
                   showColorPicker(id, color);
-                 },
+                },
               ),
             ],
           ),
@@ -209,7 +226,7 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
       ),
     );
   }
-  
+
   Future<void> fetchNotes() async {
     try {
       final notes = await _appService.fetchNotes();
@@ -309,6 +326,7 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
       _refreshController.refreshFailed();
     }
   }
+
   void showColorPicker(String id, Color currentColor) {
     showDialog(
       context: context,
@@ -347,7 +365,8 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
             TextButton(
               child: const Text('Tamam'),
               onPressed: () async {
-                bool success = await ColorService.updateColor(id, selectedColor);
+                bool success =
+                    await ColorService.updateColor(id, selectedColor);
                 if (success) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Renk başarıyla güncellendi')),
@@ -366,5 +385,29 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
         );
       },
     );
+  }
+
+  // Theme preference yükleme metodu
+  Future<void> _loadThemePreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      isDarkMode = prefs.getBool('isDarkMode') ?? false;
+      selectedMode = isDarkMode ? "Açık Mod" : "Koyu Mod";
+    });
+  }
+
+  // Theme preference kaydetme metodu
+  Future<void> _saveThemePreference(bool value) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkMode', value);
+  }
+
+  // Theme değiştirme metodu
+  void _toggleTheme() {
+    setState(() {
+      isDarkMode = !isDarkMode;
+      selectedMode = isDarkMode ? "Açık Mod" : "Koyu Mod";
+      _saveThemePreference(isDarkMode);
+    });
   }
 }

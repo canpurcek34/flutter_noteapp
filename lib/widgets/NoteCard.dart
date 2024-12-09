@@ -25,100 +25,128 @@ class NoteCard extends StatelessWidget {
     super.key, required this.colorPicker,
   });
 
+ 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        onEdit(id); // Kart tıklanırsa düzenleme callback'ini çağır
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-        decoration: BoxDecoration(
-            color: cardColor,
-            border: Border.all(
-              color: Colors.grey
-            ),
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: const [
-              /*BoxShadow(
-                color:
-                    Colors.grey.withOpacity(0.5), // Gölgenin rengi ve opaklığı
-                spreadRadius: 1, // Gölgenin yayılma miktarı
-                blurRadius: 5, // Gölgenin bulanıklık derecesi
-                offset: const Offset(0, 3), // Gölgenin konumu (x, y)
-              ),*/
-            ]),
+    return Card(
+      color: cardColor,
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: Colors.grey.withOpacity(0.3)),
+      ),
+      elevation: 2, // Hafif bir gölgelendirme
+      child: InkWell(
+        onTap: () => onEdit(id),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 8, 4, 8),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Flexible(
-                    child: Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  PopupMenuButton(
-                    onSelected: (value) {
-                      if (value == SampleItem.itemOne) {
-                        onDelete(id); // Silme işlemi için callback
-                      } else if (value == SampleItem.itemTwo) {
-                        colorPicker(id, cardColor); // Renk seçimi başlatılıyor
-                      }
-                    },
-                    itemBuilder: (BuildContext context) =>
-                        <PopupMenuEntry<SampleItem>>[
-                      const PopupMenuItem<SampleItem>(
-                        value: SampleItem.itemOne,
-                        child: Text('Delete'),
-                      ),
-                      const PopupMenuItem<SampleItem>(
-                        value: SampleItem.itemTwo,
-                        child: Text('Renk Seç'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Flexible(
-                    child: Text(
-                      note,
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+              _buildHeader(),
+              const SizedBox(height: 8),
+              _buildNoteContent(),
               const SizedBox(height: 4),
-              Text(
-                dateTime,
-                style: const TextStyle(
-                  color: Colors.black,
-                  fontSize: 14,
-                  fontWeight: FontWeight.normal,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis, // Uzun metin kısaltılır
-              )
+              _buildFooter(),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              color: Colors.black,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+        _buildOptionsMenu(),
+      ],
+    );
+  }
+
+  Widget _buildNoteContent() {
+    return Text(
+      note,
+      style: const TextStyle(
+        fontSize: 14,
+        color: Colors.black),
+      maxLines: 3, // Maks 3 satır
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  Widget _buildFooter() {
+    return Text(
+      dateTime,
+      style: TextStyle(
+        color: Colors.black.withOpacity(0.6),
+        fontSize: 12,
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  Widget _buildOptionsMenu() {
+    return PopupMenuButton<SampleItem>(
+      icon: const Icon(Icons.more_vert, size: 20),
+      onSelected: (value) {
+        switch (value) {
+          case SampleItem.itemOne:
+            onDelete(id);
+            break;
+          case SampleItem.itemTwo:
+            colorPicker(id, cardColor);
+            break;
+          case SampleItem.itemThree:
+            onEdit(id);
+            break;
+        }
+      },
+      itemBuilder: (context) => [
+        const PopupMenuItem(
+          value: SampleItem.itemOne,
+          child: Row(
+            children: [
+              Icon(Icons.delete, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Delete'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: SampleItem.itemTwo,
+          child: Row(
+            children: [
+              Icon(Icons.color_lens, color: Colors.blue),
+              SizedBox(width: 8),
+              Text('Change Color'),
+            ],
+          ),
+        ),
+        const PopupMenuItem(
+          value: SampleItem.itemThree,
+          child: Row(
+            children: [
+              Icon(Icons.edit, color: Colors.black),
+              SizedBox(width: 8),
+              Text('Düzenle'),
+            ],
+          ),
+        )
+      ],
     );
   }
 }
