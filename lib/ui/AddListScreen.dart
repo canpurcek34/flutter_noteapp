@@ -165,6 +165,12 @@ class _AddListScreenState extends State<AddListScreen> {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('Yeni Liste Ekle'),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
           actions: [
             Row(
               children: [

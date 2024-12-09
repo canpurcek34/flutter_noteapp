@@ -180,6 +180,12 @@ class _EditListScreenState extends State<EditListScreen> {
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Düzenle'),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
           actions: [
             Row(
               children: [

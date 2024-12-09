@@ -158,6 +158,12 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
       home: Scaffold(
         appBar: AppBar(
           title: const Text('Düzenle'),
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
           actions: [
             Row(
               mainAxisSize: MainAxisSize.min, // Gereksiz boşluğu önler
