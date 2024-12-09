@@ -55,9 +55,9 @@ class AuthScreen extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               // Register Button
-              OutlinedButton(
+              ElevatedButton(
                 onPressed: () {
-                  // Kayıt ekranına yönlendirme
+                  // Giriş yap ekranına yönlendirme
                   Navigator.push(
                     context,
                     MaterialPageRoute(
@@ -65,7 +65,7 @@ class AuthScreen extends StatelessWidget {
                     ),
                   );
                 },
-                style: OutlinedButton.styleFrom(
+                style: ElevatedButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
                   textStyle: const TextStyle(fontSize: 18),
                 ),

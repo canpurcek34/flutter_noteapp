@@ -20,6 +20,10 @@ class DesktopNotebookScreen extends StatefulWidget {
 
 class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
     with SingleTickerProviderStateMixin {
+  final TextEditingController _searchController = TextEditingController();
+  bool _isSearching = false;
+  List<dynamic> _filteredNotes = [];
+  List<dynamic> _filteredLists = [];
   final AppService _appService = AppService();
   List<dynamic> _notes = [];
   List<dynamic> _lists = [];
@@ -44,8 +48,152 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
   @override
   void dispose() {
     _tabController.dispose();
+    _searchController.dispose();
     super.dispose();
   }
+
+  // AppBar widget'ını güncelleyelim
+PreferredSizeWidget _buildAppBar() {
+  return AppBar(
+    elevation: 4,
+    leading: Builder(
+      builder: (context) => IconButton(
+        icon: Icon(Icons.menu),
+        onPressed: () => Scaffold.of(context).openDrawer(),
+      ),
+    ),
+    title: _isSearching
+        ? TextField(
+            controller: _searchController,
+            style: const TextStyle(color: Colors.white),
+            decoration: const InputDecoration(
+              hintText: 'Ara...',
+              hintStyle: TextStyle(color: Colors.white70),
+              border: InputBorder.none,
+            ),
+            onChanged: _filterItems,
+          )
+        : const Text('Notebook'),
+    actions: [
+      IconButton(
+        icon: Icon(_isSearching ? Icons.close : Icons.search),
+        onPressed: () {
+          setState(() {
+            _isSearching = !_isSearching;
+            if (!_isSearching) {
+              _searchController.clear();
+              _filteredNotes = _notes;
+              _filteredLists = _lists;
+            }
+          });
+        },
+      ),
+      Switch.adaptive(
+        value: isDarkMode,
+        onChanged: (_) => _toggleTheme(),
+        activeColor: Colors.cyan,
+      ),
+    ],
+    bottom: TabBar(
+      controller: _tabController,
+      indicatorColor: Colors.white,
+      labelColor: Colors.white,
+      unselectedLabelColor: Colors.white70,
+      tabs: const [
+        Tab(icon: Icon(Icons.note), text: "Notlar"),
+        Tab(icon: Icon(Icons.list), text: "Listeler"),
+      ],
+    ),
+  );
+}
+
+// Navigation Drawer widget'ı
+Widget _buildDrawer() {
+  return Drawer(
+    child: ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        DrawerHeader(
+          decoration: BoxDecoration(
+            color: Theme.of(context).primaryColor,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              const CircleAvatar(
+                radius: 30,
+                backgroundColor: Colors.white,
+                child: Icon(Icons.note_alt_outlined, size: 30, color: Colors.cyan),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Notebook',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                'Notlarınız & Listeleriniz',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+        ),
+        ListTile(
+          leading: const Icon(Icons.note),
+          title: const Text('Notlar'),
+          onTap: () {
+            _tabController.animateTo(0);
+            Navigator.pop(context);
+          },
+        ),
+        ListTile(
+          leading: const Icon(Icons.list),
+          title: const Text('Listeler'),
+          onTap: () {
+            _tabController.animateTo(1);
+            Navigator.pop(context);
+          },
+        ),
+        const Divider(),
+        ListTile(
+          leading: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
+          title: Text(isDarkMode ? 'Açık Mod' : 'Koyu Mod'),
+          onTap: () {
+            _toggleTheme();
+            Navigator.pop(context);
+          },
+        ),
+      ],
+    ),
+  );
+}
+
+// Arama filtreleme fonksiyonu
+void _filterItems(String query) {
+  setState(() {
+    if (query.isEmpty) {
+      _filteredNotes = _notes;
+      _filteredLists = _lists;
+    } else {
+      _filteredNotes = _notes.where((note) =>
+        note['title'].toString().toLowerCase().contains(query.toLowerCase()) ||
+        note['note'].toString().toLowerCase().contains(query.toLowerCase())
+      ).toList();
+      
+      _filteredLists = _lists.where((list) =>
+        list['title'].toString().toLowerCase().contains(query.toLowerCase()) ||
+        list['note'].toString().toLowerCase().contains(query.toLowerCase())
+      ).toList();
+    }
+  });
+}
 
   @override
   Widget build(BuildContext context) {
@@ -84,47 +232,8 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
               ),
             ),
       child: Scaffold(
-        appBar: AppBar(
-          elevation: 4, // Gölge ekleyerek derinlik hissi verir
-          centerTitle: true, // Başlığı ortalayın
-          title: Text(
-            'Notebook',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          actions: [
-            Row(
-              mainAxisSize: MainAxisSize.min, // Gereksiz boşluğu önler
-              children: [
-                Text(
-                  selectedMode,
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.white70 : Colors.black87,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Switch.adaptive(
-                  // Platformlara duyarlı switch
-                  value: isDarkMode,
-                  onChanged: (_) => _toggleTheme(),
-                  activeColor: Colors.cyan,
-                ),
-              ],
-            ),
-            const SizedBox(width: 8), // Daha ince boşluk
-          ],
-          bottom: TabBar(
-            controller: _tabController,
-            indicatorColor: Colors.white, // Aktif tab için alt çizgi rengi
-            labelColor: Colors.white, // Aktif tab metin rengi
-            unselectedLabelColor: Colors.white70, // Pasif tab metin rengi
-            tabs: const [
-              Tab(icon: Icon(Icons.note), text: "Notlar"),
-              Tab(icon: Icon(Icons.list), text: "Listeler"),
-            ],
-          ),
-        ),
+        appBar: _buildAppBar(),
+        drawer: _buildDrawer(),
         floatingActionButton: SpeedDial(
           animatedIcon: AnimatedIcons.menu_close,
           backgroundColor: Colors.cyan,
@@ -177,49 +286,47 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
             controller: _tabController,
             children: [
               NotesTab(
-                crossCount: crossCount,
-                notes: _notes,
-                onDelete: deleteNote,
-                onEdit: (id) async {
-                  final note =
-                      _notes.firstWhere((n) => n['id'].toString() == id);
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditNoteScreen(note: note),
-                    ),
-                  );
-                  if (result == true) fetchNotes();
-                },
-                onColorChanged: (String id, Color color) {
-                  showColorPicker(id, color);
-                },
-              ),
-              ListsTab(
-                lists: _lists,
-                onDelete: deleteList,
-                isChecked: isChecked,
-                onEdit: (id) async {
-                  final list =
-                      _lists.firstWhere((n) => n['id'].toString() == id);
-                  final result = await Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => EditListScreen(list: list),
-                    ),
-                  );
-                  if (result == true) fetchLists();
-                },
-                crossCount: crossCount,
-                onChanged: (String id, bool value) {
-                  setState(() {
-                    updateCheckbox(id, value);
-                  });
-                },
-                onColorChanged: (String id, Color color) {
-                  showColorPicker(id, color);
-                },
-              ),
+              crossCount: crossCount,
+              notes: _isSearching ? _filteredNotes : _notes,
+              onDelete: deleteNote,
+              onEdit: (id) async {
+                final note = _notes.firstWhere((n) => n['id'].toString() == id);
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditNoteScreen(note: note),
+                  ),
+                );
+                if (result == true) fetchNotes();
+              },
+              onColorChanged: (String id, Color color) {
+                showColorPicker(id, color);
+              },
+            ),
+            ListsTab(
+              lists: _isSearching ? _filteredLists : _lists,
+              onDelete: deleteList,
+              isChecked: isChecked,
+              onEdit: (id) async {
+                final list = _lists.firstWhere((n) => n['id'].toString() == id);
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => EditListScreen(list: list),
+                  ),
+                );
+                if (result == true) fetchLists();
+              },
+              crossCount: crossCount,
+              onChanged: (String id, bool value) {
+                setState(() {
+                  updateCheckbox(id, value);
+                });
+              },
+              onColorChanged: (String id, Color color) {
+                showColorPicker(id, color);
+              },
+            ),
             ],
           ),
         ),
@@ -232,6 +339,7 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
       final notes = await _appService.fetchNotes();
       setState(() {
         _notes = notes..sort((a, b) => b['date'].compareTo(a['date']));
+        _filteredNotes = _notes;
         isLoading = false;
       });
     } catch (e) {
@@ -262,6 +370,7 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
 
       setState(() {
         _lists = lists..sort((a, b) => b['date'].compareTo(a['date']));
+        _filteredLists = _lists;
         isLoading = false;
       });
     } catch (e) {
