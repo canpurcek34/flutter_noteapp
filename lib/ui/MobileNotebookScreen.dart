@@ -28,6 +28,7 @@ class _MobileNotebookScreenState extends State<MobileNotebookScreen>
   bool isLoading = true;
   bool isChecked = false;
   bool isDarkMode = false;
+  String selectedMode = "Dark Mode";
   String? formattedDate;
   final RefreshController _refreshController =
   RefreshController(initialRefresh: false);
@@ -43,11 +44,12 @@ class _MobileNotebookScreenState extends State<MobileNotebookScreen>
 
   // Theme preference yükleme metodu
   Future<void> _loadThemePreference() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      isDarkMode = prefs.getBool('isDarkMode') ?? false;
-    });
-  }
+  final prefs = await SharedPreferences.getInstance();
+  setState(() {
+    isDarkMode = prefs.getBool('isDarkMode') ?? false;
+    selectedMode = isDarkMode ? "Light Mode" : "Dark Mode";
+  });
+}
 
   // Theme preference kaydetme metodu
   Future<void> _saveThemePreference(bool value) async {
@@ -57,11 +59,12 @@ class _MobileNotebookScreenState extends State<MobileNotebookScreen>
 
   // Theme değiştirme metodu
   void _toggleTheme() {
-    setState(() {
-      isDarkMode = !isDarkMode;
-      _saveThemePreference(isDarkMode);
-    });
-  }
+  setState(() {
+    isDarkMode = !isDarkMode;
+    selectedMode = isDarkMode ? "Light Mode" : "Dark Mode";
+    _saveThemePreference(isDarkMode);
+  });
+}
 
   @override
   void dispose() {
@@ -96,7 +99,7 @@ class _MobileNotebookScreenState extends State<MobileNotebookScreen>
             Row(
               children: [
                 Text(
-                  'Dark Mode', 
+                  selectedMode, 
                   style: TextStyle(
                     color: isDarkMode ? Colors.white : Colors.black,
                   ),
