@@ -19,6 +19,8 @@ void main() async {
 // ignore: must_be_immutable
 class NotebookApp extends StatelessWidget {
   int screenWidth = 1;
+
+  NotebookApp({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -27,26 +29,28 @@ class NotebookApp extends StatelessWidget {
       theme: ThemeData(primarySwatch: Colors.blue),
       initialRoute: '/auth',
       routes: {
-        '/auth': (context) => AuthScreen(),
+        '/auth': (context) => const AuthScreen(),
         '/signup': (context) => SignUpScreen(),
-        '/login': (context) => LoginScreen(),
-        '/home': (context) => HomeScreen()
+        '/login': (context) => const LoginScreen(),
+        '/home': (context) => const HomeScreen()
       },
     );
   }
 }
 
 class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
 
     if (screenWidth < 600) {
       // Mobil ekran
-      return MobileNotebookScreen();
+      return const MobileNotebookScreen();
     } else {
       // Masaüstü ekran
-      return DesktopNotebookScreen();
+      return const DesktopNotebookScreen();
     }
   }
 }

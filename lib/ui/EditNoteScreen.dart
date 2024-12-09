@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class EditNoteScreen extends StatefulWidget {
   final Map<String, dynamic> note;
 
-  EditNoteScreen({required this.note});
+  const EditNoteScreen({super.key, required this.note});
 
   @override
   _EditNoteScreenState createState() => _EditNoteScreenState();
@@ -77,8 +77,8 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
 
       // Snackbar ile mesaj göster
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Not güncellendi.'),
+        const SnackBar(
+          content: Text('Not güncellendi.'),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
         ),
@@ -108,7 +108,7 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
           )
         : ThemeData.light().copyWith(
             primaryColor: Colors.cyan,
-            appBarTheme: AppBarTheme(
+            appBarTheme: const AppBarTheme(
               backgroundColor: Colors.cyan,
             ),
           ),

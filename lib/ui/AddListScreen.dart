@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // DateFormat için
 
 class AddListScreen extends StatefulWidget {
+  const AddListScreen({super.key});
+
   @override
   _AddListScreenState createState() => _AddListScreenState();
 }
@@ -104,14 +106,14 @@ class _AddListScreenState extends State<AddListScreen> {
           )
         : ThemeData.light().copyWith(
             primaryColor: Colors.cyan,
-            appBarTheme: AppBarTheme(
+            appBarTheme: const AppBarTheme(
               backgroundColor: Colors.cyan,
             ),
           ),
       child:
         Scaffold(
           appBar: AppBar(
-            title: Text('Yeni Liste Ekle'),
+            title: const Text('Yeni Liste Ekle'),
             actions: [
             Row(
               children: [
@@ -134,7 +136,7 @@ class _AddListScreenState extends State<AddListScreen> {
           ]
           ),
           body: Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Form(
               key: _formKey,
               child: Column(
@@ -148,14 +150,14 @@ class _AddListScreenState extends State<AddListScreen> {
                           color: Colors.grey.withOpacity(0.8),
                           spreadRadius: 2,
                           blurRadius: 5,
-                          offset: Offset(0, 3), // Gölgenin konumu
+                          offset: const Offset(0, 3), // Gölgenin konumu
                         ),
                       ],
                     ),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: TextFormField(
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Liste',
                           border: InputBorder.none,
                         ),
@@ -171,8 +173,8 @@ class _AddListScreenState extends State<AddListScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 16),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 16),
+                  const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
@@ -180,7 +182,7 @@ class _AddListScreenState extends State<AddListScreen> {
                         addList();
                       }
                     },
-                    child: Text('Kaydet'),
+                    child: const Text('Kaydet'),
                   ),
                 ],
               ),

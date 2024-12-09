@@ -8,7 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 class EditListScreen extends StatefulWidget {
   final Map<String, dynamic> list;
 
-  EditListScreen({required this.list});
+  const EditListScreen({super.key, required this.list});
 
   @override
   _EditListScreenState createState() => _EditListScreenState();
@@ -74,8 +74,8 @@ class _EditListScreenState extends State<EditListScreen> {
 
       // Snackbar ile mesaj göster
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Not güncellendi.'),
+        const SnackBar(
+          content: Text('Not güncellendi.'),
           backgroundColor: Colors.green,
           behavior: SnackBarBehavior.floating,
         ),
@@ -105,7 +105,7 @@ class _EditListScreenState extends State<EditListScreen> {
           )
         : ThemeData.light().copyWith(
             primaryColor: Colors.cyan,
-            appBarTheme: AppBarTheme(
+            appBarTheme: const AppBarTheme(
               backgroundColor: Colors.cyan,
             ),
           ),

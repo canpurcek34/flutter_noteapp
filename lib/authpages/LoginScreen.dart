@@ -31,7 +31,7 @@ class _LoginScreenState extends State<LoginScreen> {
       // Oturum açık ise direkt NoteScreen'e yönlendir
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
     }
   }
@@ -54,12 +54,12 @@ class _LoginScreenState extends State<LoginScreen> {
       // Giriş başarılı, Notebook ekranına yönlendir
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
       );
 
       if (user != null && !user.emailVerified) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
+          const SnackBar(
             content:
                 Text('E-posta doğrulanmamış. Lütfen e-postanızı kontrol edin.'),
           ),
@@ -69,7 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
         // Giriş başarılı, Notebook ekranına yönlendir
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomeScreen()),
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
         );
       }
     } catch (e) {
@@ -82,20 +82,20 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text("Giriş yap")),
+      appBar: AppBar(title: const Text("Giriş yap")),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
             TextField(
               controller: emailController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                   labelText: "Email", border: OutlineInputBorder()),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             TextField(
               controller: passwordController,
-              decoration: InputDecoration(
+              decoration: const InputDecoration(
                   labelText: "Şifre", border: OutlineInputBorder()),
               obscureText: true,
             ),
@@ -110,12 +110,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     });
                   },
                 ),
-                Text("Oturumu açık tut"),
+                const Text("Oturumu açık tut"),
               ],
             ),
             ElevatedButton(
               onPressed: () => login(context),
-              child: Text("Giriş Yap"),
+              child: const Text("Giriş Yap"),
             ),
           ],
         ),

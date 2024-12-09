@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'LoginScreen.dart';
 import 'SignScreen.dart';
 class AuthScreen extends StatelessWidget {
+  const AuthScreen({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -19,21 +21,21 @@ class AuthScreen extends StatelessWidget {
             mainAxisSize: MainAxisSize.min, // İçeriğin ortalanmasını sağlar
             children: [
               // Title
-              Text(
+              const Text(
                 'Hoş Geldiniz!',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               // Description
-              Text(
+              const Text(
                 'Devam etmek için lütfen giriş yapın veya kaydolun.',
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 16),
               ),
-              SizedBox(height: 40),
+              const SizedBox(height: 40),
               // Login Button
               ElevatedButton(
                 onPressed: () {
@@ -41,17 +43,17 @@ class AuthScreen extends StatelessWidget {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => LoginScreen(),
+                      builder: (context) => const LoginScreen(),
                     ),
                   );
                 },
                 style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                  textStyle: TextStyle(fontSize: 18),
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                  textStyle: const TextStyle(fontSize: 18),
                 ),
-                child: Text('Giriş Yap'),
+                child: const Text('Giriş Yap'),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               // Register Button
               OutlinedButton(
                 onPressed: () {
@@ -64,10 +66,10 @@ class AuthScreen extends StatelessWidget {
                   );
                 },
                 style: OutlinedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                  textStyle: TextStyle(fontSize: 18),
+                  padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
+                  textStyle: const TextStyle(fontSize: 18),
                 ),
-                child: Text('Kaydol'),
+                child: const Text('Kaydol'),
               ),
             ],
           ),

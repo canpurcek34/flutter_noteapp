@@ -8,6 +8,8 @@ class SignUpScreen extends StatelessWidget {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController fullNameController = TextEditingController();
 
+  SignUpScreen({super.key});
+
   Future<void> _signUp(BuildContext context) async {
     try {
       // Kullanıcıyı oluştur
@@ -22,7 +24,7 @@ class SignUpScreen extends StatelessWidget {
 
       // Kullanıcıya bilgi mesajı göster
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text(
             'Kayıt başarılı! Lütfen e-posta adresinizi doğrulayın.',
           ),
@@ -41,7 +43,7 @@ class SignUpScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Kaydol'),
+        title: const Text('Kaydol'),
         backgroundColor: Colors.blueAccent,
         elevation: 0,
       ),
@@ -53,40 +55,40 @@ class SignUpScreen extends StatelessWidget {
             children: [
               TextField(
                 controller: emailController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'E-posta Adresi',
                   border: OutlineInputBorder(),
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextField(
                 controller: usernameController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Kullanıcı Adı',
                   border: OutlineInputBorder(),
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextField(
                 controller: fullNameController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Ad Soyad',
                   border: OutlineInputBorder(),
                 ),
               ),
-              SizedBox(height: 16),
+              const SizedBox(height: 16),
               TextField(
                 controller: passwordController,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Şifre',
                   border: OutlineInputBorder(),
                 ),
                 obscureText: true,
               ),
-              SizedBox(height: 24),
+              const SizedBox(height: 24),
               ElevatedButton(
                 onPressed: () => _signUp(context),
-                child: Text('Kayıt Ol'),
+                child: const Text('Kayıt Ol'),
               ),
             ],
           ),

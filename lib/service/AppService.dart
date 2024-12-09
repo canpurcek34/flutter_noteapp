@@ -1,4 +1,3 @@
-import 'dart:ui';
 
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -173,7 +172,7 @@ class ColorService {
   static String convertColorToString(Color color) {
     return colorNames.entries
         .firstWhere((entry) => entry.value == color,
-        orElse: () => MapEntry('white', Colors.white))
+        orElse: () => const MapEntry('white', Colors.white))
         .key;
   }
 

@@ -7,6 +7,8 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // DateFormat için
 
 class AddNoteScreen extends StatefulWidget {
+  const AddNoteScreen({super.key});
+
   @override
   _AddNoteScreenState createState() => _AddNoteScreenState();
 }
@@ -105,14 +107,14 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
           )
         : ThemeData.light().copyWith(
             primaryColor: Colors.cyan,
-            appBarTheme: AppBarTheme(
+            appBarTheme: const AppBarTheme(
               backgroundColor: Colors.cyan,
             ),
           ),
       child:
         Scaffold(
           appBar: AppBar(
-            title: Text('Yeni Not Ekle'),
+            title: const Text('Yeni Not Ekle'),
             actions: [
             Row(
               children: [
@@ -135,7 +137,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
           ]
           ),
           body: Padding(
-            padding: EdgeInsets.all(16.0),
+            padding: const EdgeInsets.all(16.0),
             child: Form(
               key: _formKey,
               child: Column(
@@ -149,14 +151,14 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                           color: Colors.grey.withOpacity(0.8),
                           spreadRadius: 2,
                           blurRadius: 5,
-                          offset: Offset(0, 3), // Gölgenin konumu
+                          offset: const Offset(0, 3), // Gölgenin konumu
                         ),
                       ],
                     ),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: TextFormField(
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Başlık',
                           border: InputBorder.none,
                         ),
@@ -172,7 +174,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
                   Container(
                     decoration: BoxDecoration(
                       color: Colors.white,
@@ -182,14 +184,14 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                           color: Colors.grey.withOpacity(0.5),
                           spreadRadius: 2,
                           blurRadius: 5,
-                          offset: Offset(0, 3),
+                          offset: const Offset(0, 3),
                         ),
                       ],
                     ),
                     child: Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 16),
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
                       child: TextFormField(
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           labelText: 'Not',
                           border: InputBorder.none,
                         ),
@@ -207,7 +209,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                       ),
                     ),
                   ),
-                  SizedBox(height: 20),
+                  const SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
                       if (_formKey.currentState!.validate()) {
@@ -215,7 +217,7 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                         addNote();
                       }
                     },
-                    child: Text('Kaydet'),
+                    child: const Text('Kaydet'),
                   ),
                 ],
               ),

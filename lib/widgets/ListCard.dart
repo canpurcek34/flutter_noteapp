@@ -38,7 +38,7 @@ class ListCard extends StatelessWidget {
               color: Colors.grey
             ),
             borderRadius: BorderRadius.circular(12),
-            boxShadow: [
+            boxShadow: const [
               /*BoxShadow(
                 color:
                 Colors.grey.withOpacity(0.5), // Gölgenin rengi ve opaklığı

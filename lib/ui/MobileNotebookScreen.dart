@@ -13,6 +13,8 @@ import 'EditNoteScreen.dart';
 
 
 class MobileNotebookScreen extends StatefulWidget {
+  const MobileNotebookScreen({super.key});
+
   @override
   _MobileNotebookScreenState createState() => _MobileNotebookScreenState();
 }
@@ -83,7 +85,7 @@ class _MobileNotebookScreenState extends State<MobileNotebookScreen>
           )
         : ThemeData.light().copyWith(
             primaryColor: Colors.cyan,
-            appBarTheme: AppBarTheme(
+            appBarTheme: const AppBarTheme(
               backgroundColor: Colors.cyan,
             ),
           ),
@@ -130,7 +132,7 @@ class _MobileNotebookScreenState extends State<MobileNotebookScreen>
               onTap: () async {
                 final result = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AddNoteScreen()),
+                  MaterialPageRoute(builder: (context) => const AddNoteScreen()),
                 );
                 if (result == true) fetchNotes();
               },
@@ -142,7 +144,7 @@ class _MobileNotebookScreenState extends State<MobileNotebookScreen>
               onTap: () async {
                 final result = await Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => AddListScreen()),
+                  MaterialPageRoute(builder: (context) => const AddListScreen()),
                 );
                 if (result == true) fetchLists();
               },
@@ -315,7 +317,7 @@ class _MobileNotebookScreenState extends State<MobileNotebookScreen>
           content: SingleChildScrollView(
             child: BlockPicker(
               pickerColor: selectedColor,
-              availableColors: [
+              availableColors: const [
                 Colors.red,
                 Colors.blue,
                 Colors.green,
@@ -348,6 +350,7 @@ class _MobileNotebookScreenState extends State<MobileNotebookScreen>
                     const SnackBar(content: Text('Renk başarıyla güncellendi')),
                   );
                   fetchLists(); // Refresh lists to show updated color
+                  fetchNotes();
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(content: Text('Renk güncellenemedi')),
