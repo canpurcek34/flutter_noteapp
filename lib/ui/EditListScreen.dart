@@ -181,7 +181,7 @@ class _EditListScreenState extends State<EditListScreen> {
         appBar: AppBar(
           title: const Text('Düzenle'),
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back),
             onPressed: () {
               Navigator.pop(context);
             },

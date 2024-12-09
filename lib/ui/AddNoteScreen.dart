@@ -4,226 +4,235 @@ import 'package:http/http.dart' as http;
 import 'package:intl/date_symbol_data_local.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // DateFormat için
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AddNoteScreen extends StatefulWidget {
   const AddNoteScreen({super.key});
 
   @override
-  _AddNoteScreenState createState() => _AddNoteScreenState();
+  State<AddNoteScreen> createState() => _AddNoteScreenState();
 }
 
 class _AddNoteScreenState extends State<AddNoteScreen> {
   final _formKey = GlobalKey<FormState>();
-  String _title = '';
-  String _note = '';
-  String? _formattedDate; // Formatlanmış tarih
-  bool isDarkMode = false;
+  final _titleController = TextEditingController();
+  final _noteController = TextEditingController();
+  late Future<bool> _themePreferenceFuture;
+  String? _formattedDate;
+  bool _isDarkMode = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-
-    // Tarih formatını başlatıyoruz ve ardından formatlı tarihi alıyoruz
-    initializeDateFormatting('tr_TR', null).then((_) {
-      setState(() {
-        DateTime now = DateTime.now();
-        _formattedDate = DateFormat.yMMMMd('tr_TR').add_jm().format(now);
-      });
-    });
+    _themePreferenceFuture = _loadThemePreference();
+    _initializeDate();
   }
-    // Theme preference yükleme metodu
-  Future<void> _loadThemePreference() async {
-    final prefs = await SharedPreferences.getInstance();
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _initializeDate() async {
+    await initializeDateFormatting('tr_TR', null);
     setState(() {
-      isDarkMode = prefs.getBool('isDarkMode') ?? false;
+      _formattedDate = DateFormat.yMMMMd('tr_TR').add_jm().format(DateTime.now());
     });
   }
 
-  // Theme preference kaydetme metodu
+  Future<bool> _loadThemePreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() => _isDarkMode = prefs.getBool('isDarkMode') ?? false);
+    return _isDarkMode;
+  }
+
   Future<void> _saveThemePreference(bool value) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('isDarkMode', value);
   }
 
-  // Theme değiştirme metodu
   void _toggleTheme() {
     setState(() {
-      isDarkMode = !isDarkMode;
-      _saveThemePreference(isDarkMode);
+      _isDarkMode = !_isDarkMode;
+      _saveThemePreference(_isDarkMode);
     });
   }
 
-  Future<void> addNote() async {
-    final user =
-        FirebaseAuth.instance.currentUser; // Firebase'den kullanıcı bilgisi al
-    if (user == null) {
-      throw Exception("Kullanıcı oturumu yok");
-    }
-    final uid = user.uid; // UUID'yi al
-    const type = "note";
+  Future<void> _addNote() async {
+    if (!_formKey.currentState!.validate()) return;
 
-    final response = await http.post(
-      Uri.parse(
-          'https://emrecanpurcek.com.tr/projects/methods/note/insert.php'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'uuid': uid,
-        'title': _title,
-        'note': _note,
-        'type': type,
-        'color': "white",
-        'date': _formattedDate ??
-            DateTime.now().toString(), // Formatlanmış tarihi gönderiyoruz
-      }),
+    setState(() => _isLoading = true);
+
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) throw Exception("User not authenticated");
+
+      final response = await http.post(
+        Uri.parse('https://emrecanpurcek.com.tr/projects/methods/note/insert.php'),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({
+          'uuid': user.uid,
+          'title': _titleController.text,
+          'note': _noteController.text,
+          'type': 'note',
+          'color': 'white',
+          'date': _formattedDate ?? DateTime.now().toString(),
+        }),
+      );
+
+      final responseData = json.decode(response.body);
+
+      if (responseData['success'] == 1) {
+        Navigator.pop(context, true);
+      } else {
+        _showErrorSnackBar(responseData['message'] ?? 'An error occurred');
+      }
+    } catch (e) {
+      _showErrorSnackBar('Failed to add note: ${e.toString()}');
+    } finally {
+      setState(() => _isLoading = false);
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.red,
+      ),
     );
-
-    final Map<String, dynamic> responseData = json.decode(response.body);
-
-    if (responseData['success'] == 1) {
-      Navigator.pop(
-          context, true); // Başarılı olursa geri dön ve listeyi yenile
-      print("Yeni veri girişi başarılı.");
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(responseData['message'] ?? 'Bir hata oluştu'),
-          behavior: SnackBarBehavior.floating));
-      print("Yeni veri girişi başarısız.");
-    }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: isDarkMode 
-        ? ThemeData.dark().copyWith(
-            primaryColor: Colors.cyan,
-            scaffoldBackgroundColor: Colors.grey[900],
-            appBarTheme: AppBarTheme(
-              backgroundColor: Colors.grey[850],
-            ),
-          )
-        : ThemeData.light().copyWith(
-            primaryColor: Colors.cyan,
-            appBarTheme: const AppBarTheme(
-              backgroundColor: Colors.cyan,
-            ),
-          ),
-      child:
-        Scaffold(
-          appBar: AppBar(
-            title: const Text('Yeni Not Ekle'),
-            actions: [
-            Row(
-              children: [
-                Text(
-                  'Dark Mode', 
-                  style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
+    return FutureBuilder<bool>(
+      future: _themePreferenceFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const CircularProgressIndicator();
+
+        return Theme(
+          data: _isDarkMode
+              ? ThemeData.dark().copyWith(
+                  primaryColor: Colors.cyan,
+                  scaffoldBackgroundColor: Colors.grey[900],
+                  appBarTheme: AppBarTheme(
+                    backgroundColor: Colors.grey[850],
+                    elevation: 0,
+                  ),
+                  inputDecorationTheme: InputDecorationTheme(
+                    filled: true,
+                    fillColor: Colors.grey[800],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                )
+              : ThemeData.light().copyWith(
+                  primaryColor: Colors.cyan,
+                  appBarTheme: const AppBarTheme(
+                    backgroundColor: Colors.cyan,
+                    elevation: 0,
+                  ),
+                  inputDecorationTheme: InputDecorationTheme(
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-                Switch(
-                  value: isDarkMode,
-                  onChanged: (_) => _toggleTheme(),
-                  activeColor: Colors.white,
-                  activeTrackColor: Colors.cyan,
-                  inactiveTrackColor: Colors.grey[300],
+          child: Scaffold(
+            appBar: AppBar(
+              title: const Text('Yeni Not Ekle'),
+              actions: [
+                Row(
+                  children: [
+                    Text(
+                      'Dark Mode',
+                      style: TextStyle(
+                        color: _isDarkMode ? Colors.white : Colors.black,
+                      ),
+                    ),
+                    Switch.adaptive(
+                      value: _isDarkMode,
+                      onChanged: (_) => _toggleTheme(),
+                      activeColor: Colors.white,
+                      activeTrackColor: Colors.cyan,
+                    ),
+                  ],
                 ),
+                const SizedBox(width: 10),
               ],
             ),
-            const SizedBox(width: 10),
-          ]
-          ),
-          body: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.8),
-                          spreadRadius: 2,
-                          blurRadius: 5,
-                          offset: const Offset(0, 3), // Gölgenin konumu
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: TextFormField(
+            body: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextFormField(
+                        controller: _titleController,
                         decoration: const InputDecoration(
                           labelText: 'Başlık',
-                          border: InputBorder.none,
+                          hintText: 'Not başlığını giriniz',
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Başlık giriniz';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          _title = value!;
-                        },
+                        validator: (value) =>
+                            value?.isEmpty ?? true ? 'Başlık giriniz' : null,
+                        textInputAction: TextInputAction.next,
                       ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.5),
-                          spreadRadius: 2,
-                          blurRadius: 5,
-                          offset: const Offset(0, 3),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: TextFormField(
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _noteController,
                         decoration: const InputDecoration(
                           labelText: 'Not',
-                          border: InputBorder.none,
+                          hintText: 'Notunuzu giriniz',
+                          alignLabelWithHint: true,
                         ),
-                        maxLines: null,
-                        keyboardType: TextInputType.multiline,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Not giriniz';
-                          }
-                          return null;
-                        },
-                        onSaved: (value) {
-                          _note = value!;
-                        },
+                        maxLines: 8,
+                        textInputAction: TextInputAction.newline,
+                        validator: (value) =>
+                            value?.isEmpty ?? true ? 'Not giriniz' : null,
                       ),
-                    ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: _isLoading ? null : _addNote,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor:
+                                      AlwaysStoppedAnimation<Color>(Colors.white),
+                                ),
+                              )
+                            : const Text(
+                                'Kaydet',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        _formKey.currentState!.save();
-                        addNote();
-                      }
-                    },
-                    child: const Text('Kaydet'),
-                  ),
-                ],
+                ),
               ),
             ),
           ),
-        ),
+        );
+      },
     );
   }
 }

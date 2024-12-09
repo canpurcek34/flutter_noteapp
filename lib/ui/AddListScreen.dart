@@ -166,7 +166,7 @@ class _AddListScreenState extends State<AddListScreen> {
         appBar: AppBar(
           title: const Text('Yeni Liste Ekle'),
           leading: IconButton(
-            icon: Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back),
             onPressed: () {
               Navigator.pop(context);
             },
