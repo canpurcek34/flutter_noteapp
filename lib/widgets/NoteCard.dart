@@ -101,7 +101,7 @@ class NoteCard extends StatelessWidget {
 
   Widget _buildOptionsMenu() {
     return PopupMenuButton<SampleItem>(
-      icon: const Icon(Icons.more_vert, size: 20),
+      icon: const Icon(Icons.more_vert, size: 20, color: Colors.black),
       onSelected: (value) {
         switch (value) {
           case SampleItem.itemOne:

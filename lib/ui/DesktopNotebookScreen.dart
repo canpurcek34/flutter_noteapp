@@ -34,7 +34,7 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
   String selectedMode = "Açık Mod";
   String? formattedDate;
   final RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+      RefreshController(initialRefresh: true);
 
   @override
   void initState() {
@@ -53,147 +53,162 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
   }
 
   // AppBar widget'ını güncelleyelim
-PreferredSizeWidget _buildAppBar() {
-  return AppBar(
-    elevation: 4,
-    leading: Builder(
-      builder: (context) => IconButton(
-        icon: Icon(Icons.menu),
-        onPressed: () => Scaffold.of(context).openDrawer(),
+  PreferredSizeWidget _buildAppBar() {
+    return AppBar(
+      elevation: 4,
+      leading: Builder(
+        builder: (context) => IconButton(
+          icon: Icon(Icons.menu),
+          onPressed: () => Scaffold.of(context).openDrawer(),
+        ),
       ),
-    ),
-    title: _isSearching
-        ? TextField(
-            controller: _searchController,
-            style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
-              hintText: 'Ara...',
-              hintStyle: TextStyle(color: Colors.white70),
-              border: InputBorder.none,
-            ),
-            onChanged: _filterItems,
-          )
-        : const Text('Notebook'),
-    actions: [
-      IconButton(
-        icon: Icon(_isSearching ? Icons.close : Icons.search),
-        onPressed: () {
-          setState(() {
-            _isSearching = !_isSearching;
-            if (!_isSearching) {
-              _searchController.clear();
-              _filteredNotes = _notes;
-              _filteredLists = _lists;
-            }
-          });
-        },
-      ),
-      Switch.adaptive(
-        value: isDarkMode,
-        onChanged: (_) => _toggleTheme(),
-        activeColor: Colors.cyan,
-      ),
-    ],
-    bottom: TabBar(
-      controller: _tabController,
-      indicatorColor: Colors.white,
-      labelColor: Colors.white,
-      unselectedLabelColor: Colors.white70,
-      tabs: const [
-        Tab(icon: Icon(Icons.note), text: "Notlar"),
-        Tab(icon: Icon(Icons.list), text: "Listeler"),
+      title: _isSearching
+          ? TextField(
+              controller: _searchController,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                hintText: 'Ara...',
+                hintStyle: TextStyle(color: Colors.white70),
+                border: InputBorder.none,
+              ),
+              onChanged: _filterItems,
+            )
+          : const Text('Notebook'),
+      actions: [
+        IconButton(
+          icon: Icon(_isSearching ? Icons.close : Icons.search),
+          onPressed: () {
+            setState(() {
+              _isSearching = !_isSearching;
+              if (!_isSearching) {
+                _searchController.clear();
+                _filteredNotes = _notes;
+                _filteredLists = _lists;
+              }
+            });
+          },
+        ),
+        Switch.adaptive(
+          value: isDarkMode,
+          onChanged: (_) => _toggleTheme(),
+          activeColor: Colors.cyan,
+        ),
       ],
-    ),
-  );
-}
+      bottom: TabBar(
+        controller: _tabController,
+        indicatorColor: Colors.white,
+        labelColor: Colors.white,
+        unselectedLabelColor: Colors.white70,
+        tabs: const [
+          Tab(icon: Icon(Icons.note), text: "Notlar"),
+          Tab(icon: Icon(Icons.list), text: "Listeler"),
+        ],
+      ),
+    );
+  }
 
-// Navigation Drawer widget'ı
-Widget _buildDrawer() {
-  return Drawer(
-    child: ListView(
-      padding: EdgeInsets.zero,
-      children: [
-        DrawerHeader(
-          decoration: BoxDecoration(
-            color: Theme.of(context).primaryColor,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              const CircleAvatar(
-                radius: 30,
-                backgroundColor: Colors.white,
-                child: Icon(Icons.note_alt_outlined, size: 30, color: Colors.cyan),
-              ),
-              const SizedBox(height: 10),
-              const Text(
-                'Notebook',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
+  // Navigation Drawer widget'ı
+  Widget _buildDrawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: Theme.of(context).primaryColor,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                const CircleAvatar(
+                  radius: 30,
+                  backgroundColor: Colors.white,
+                  child: Icon(Icons.note_alt_outlined,
+                      size: 30, color: Colors.cyan),
                 ),
-              ),
-              Text(
-                'Notlarınız & Listeleriniz',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.8),
-                  fontSize: 14,
+                const SizedBox(height: 10),
+                const Text(
+                  'Notebook',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-            ],
+                Text(
+                  'Notlarınız & Listeleriniz',
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.8),
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        ListTile(
-          leading: const Icon(Icons.note),
-          title: const Text('Notlar'),
-          onTap: () {
-            _tabController.animateTo(0);
-            Navigator.pop(context);
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.list),
-          title: const Text('Listeler'),
-          onTap: () {
-            _tabController.animateTo(1);
-            Navigator.pop(context);
-          },
-        ),
-        const Divider(),
-        ListTile(
-          leading: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
-          title: Text(isDarkMode ? 'Açık Mod' : 'Koyu Mod'),
-          onTap: () {
-            _toggleTheme();
-            Navigator.pop(context);
-          },
-        ),
-      ],
-    ),
-  );
-}
+          ListTile(
+            leading: const Icon(Icons.note),
+            title: const Text('Notlar'),
+            onTap: () {
+              _tabController.animateTo(0);
+              Navigator.pop(context);
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.list),
+            title: const Text('Listeler'),
+            onTap: () {
+              _tabController.animateTo(1);
+              Navigator.pop(context);
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: Icon(isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            title: Text(isDarkMode ? 'Açık Mod' : 'Koyu Mod'),
+            onTap: () {
+              _toggleTheme();
+              Navigator.pop(context);
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
 // Arama filtreleme fonksiyonu
-void _filterItems(String query) {
-  setState(() {
-    if (query.isEmpty) {
-      _filteredNotes = _notes;
-      _filteredLists = _lists;
-    } else {
-      _filteredNotes = _notes.where((note) =>
-        note['title'].toString().toLowerCase().contains(query.toLowerCase()) ||
-        note['note'].toString().toLowerCase().contains(query.toLowerCase())
-      ).toList();
-      
-      _filteredLists = _lists.where((list) =>
-        list['title'].toString().toLowerCase().contains(query.toLowerCase()) ||
-        list['note'].toString().toLowerCase().contains(query.toLowerCase())
-      ).toList();
-    }
-  });
-}
+  void _filterItems(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredNotes = _notes;
+        _filteredLists = _lists;
+      } else {
+        _filteredNotes = _notes
+            .where((note) =>
+                note['title']
+                    .toString()
+                    .toLowerCase()
+                    .contains(query.toLowerCase()) ||
+                note['note']
+                    .toString()
+                    .toLowerCase()
+                    .contains(query.toLowerCase()))
+            .toList();
+
+        _filteredLists = _lists
+            .where((list) =>
+                list['title']
+                    .toString()
+                    .toLowerCase()
+                    .contains(query.toLowerCase()) ||
+                list['note']
+                    .toString()
+                    .toLowerCase()
+                    .contains(query.toLowerCase()))
+            .toList();
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -243,7 +258,8 @@ void _filterItems(String query) {
           spacing: 10,
           children: [
             SpeedDialChild(
-              child: Icon(Icons.note_add, color: isDarkMode ? Colors.white : Colors.black87),
+              child: Icon(Icons.note_add,
+                  color: isDarkMode ? Colors.white : Colors.black87),
               backgroundColor: Colors.cyan,
               label: 'Yeni Not Ekle',
               labelStyle: TextStyle(
@@ -259,7 +275,8 @@ void _filterItems(String query) {
               },
             ),
             SpeedDialChild(
-              child: Icon(Icons.list, color: isDarkMode ? Colors.white : Colors.black87),
+              child: Icon(Icons.list,
+                  color: isDarkMode ? Colors.white : Colors.black87),
               backgroundColor: Colors.cyan,
               label: 'Yeni Liste Ekle',
               labelStyle: TextStyle(
@@ -278,7 +295,7 @@ void _filterItems(String query) {
         ),
         body: SmartRefresher(
           enablePullDown: true,
-          enablePullUp: false,
+          enablePullUp: true,
           header: const WaterDropHeader(),
           controller: _refreshController,
           onRefresh: _onRefresh,
@@ -286,47 +303,49 @@ void _filterItems(String query) {
             controller: _tabController,
             children: [
               NotesTab(
-              crossCount: crossCount,
-              notes: _isSearching ? _filteredNotes : _notes,
-              onDelete: deleteNote,
-              onEdit: (id) async {
-                final note = _notes.firstWhere((n) => n['id'].toString() == id);
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditNoteScreen(note: note),
-                  ),
-                );
-                if (result == true) fetchNotes();
-              },
-              onColorChanged: (String id, Color color) {
-                showColorPicker(id, color);
-              },
-            ),
-            ListsTab(
-              lists: _isSearching ? _filteredLists : _lists,
-              onDelete: deleteList,
-              isChecked: isChecked,
-              onEdit: (id) async {
-                final list = _lists.firstWhere((n) => n['id'].toString() == id);
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => EditListScreen(list: list),
-                  ),
-                );
-                if (result == true) fetchLists();
-              },
-              crossCount: crossCount,
-              onChanged: (String id, bool value) {
-                setState(() {
-                  updateCheckbox(id, value);
-                });
-              },
-              onColorChanged: (String id, Color color) {
-                showColorPicker(id, color);
-              },
-            ),
+                crossCount: crossCount,
+                notes: _isSearching ? _filteredNotes : _notes,
+                onDelete: deleteNote,
+                onEdit: (id) async {
+                  final note =
+                      _notes.firstWhere((n) => n['id'].toString() == id);
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditNoteScreen(note: note),
+                    ),
+                  );
+                  if (result == true) fetchNotes();
+                },
+                onColorChanged: (String id, Color color) {
+                  showColorPicker(id, color);
+                },
+              ),
+              ListsTab(
+                lists: _isSearching ? _filteredLists : _lists,
+                onDelete: deleteList,
+                isChecked: isChecked,
+                onEdit: (id) async {
+                  final list =
+                      _lists.firstWhere((n) => n['id'].toString() == id);
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => EditListScreen(list: list),
+                    ),
+                  );
+                  if (result == true) fetchLists();
+                },
+                crossCount: crossCount,
+                onChanged: (String id, bool value) {
+                  setState(() {
+                    updateCheckbox(id, value);
+                  });
+                },
+                onColorChanged: (String id, Color color) {
+                  showColorPicker(id, color);
+                },
+              ),
             ],
           ),
         ),
@@ -428,9 +447,11 @@ void _filterItems(String query) {
 
   void _onRefresh() async {
     try {
-      await fetchNotes();
-      await fetchLists();
-      _refreshController.refreshCompleted();
+      setState(() async {
+        await fetchNotes();
+        await fetchLists();
+        _refreshController.refreshCompleted();
+      }); // Ekstra güncellenme için
     } catch (e) {
       _refreshController.refreshFailed();
     }

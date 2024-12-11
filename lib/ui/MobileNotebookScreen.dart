@@ -34,7 +34,7 @@ class _MobileNotebookScreenState extends State<MobileNotebookScreen>
   String selectedMode = "Açık Mod";
   String? formattedDate;
   final RefreshController _refreshController =
-      RefreshController(initialRefresh: false);
+      RefreshController(initialRefresh: true);
 
   @override
   void initState() {
@@ -295,7 +295,7 @@ class _MobileNotebookScreenState extends State<MobileNotebookScreen>
         ),
         body: SmartRefresher(
           enablePullDown: true,
-          enablePullUp: false,
+          enablePullUp: true,
           header: const WaterDropHeader(),
           controller: _refreshController,
           onRefresh: _onRefresh,
@@ -447,9 +447,11 @@ class _MobileNotebookScreenState extends State<MobileNotebookScreen>
 
   void _onRefresh() async {
     try {
-      await fetchNotes();
-      await fetchLists();
-      _refreshController.refreshCompleted();
+      setState(() async {
+        await fetchNotes();
+        await fetchLists();
+        _refreshController.refreshCompleted();
+      }); // Ekstra güncellenme için
     } catch (e) {
       _refreshController.refreshFailed();
     }
