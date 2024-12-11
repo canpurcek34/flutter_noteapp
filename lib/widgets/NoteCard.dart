@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 enum SampleItem { itemOne, itemTwo, itemThree }
 
+// ignore: must_be_immutable
 class NoteCard extends StatelessWidget {
   final String id; // Not ID'si
   final String title;
@@ -13,7 +14,7 @@ class NoteCard extends StatelessWidget {
   final Function(String) onEdit; // Düzenleme işlemi için callback
   //final Function(String, Color) onColorChange; // Renk değiştirme callback
 
-  const NoteCard({
+  NoteCard({
     required this.id,
     required this.title,
     required this.note,
@@ -24,6 +25,8 @@ class NoteCard extends StatelessWidget {
     required this.cardColor,
     super.key, required this.colorPicker,
   });
+
+  bool isDarkMode = false;
 
  
   @override
@@ -100,7 +103,38 @@ class NoteCard extends StatelessWidget {
   }
 
   Widget _buildOptionsMenu() {
-    return PopupMenuButton<SampleItem>(
+    return Theme(data: isDarkMode
+          ? ThemeData.dark().copyWith(
+              primaryColor: Colors.cyan,
+              scaffoldBackgroundColor: Colors.grey[900],
+              appBarTheme: AppBarTheme(
+                backgroundColor: Colors.grey[850],
+                elevation: 4,
+              ),
+              colorScheme: const ColorScheme.dark(
+                primary: Colors.cyan,
+                secondary: Colors.cyanAccent,
+              ),
+              floatingActionButtonTheme: const FloatingActionButtonThemeData(
+                backgroundColor: Colors.cyan,
+              ),
+            )
+          : ThemeData.light().copyWith(
+              primaryColor: Colors.cyan,
+              appBarTheme: const AppBarTheme(
+                backgroundColor: Colors.cyan,
+                elevation: 4,
+              ),
+              colorScheme: const ColorScheme.light(
+                primary: Colors.cyan,
+                secondary: Colors.cyanAccent,
+              ),
+              floatingActionButtonTheme: const FloatingActionButtonThemeData(
+                backgroundColor: Colors.cyan,
+              ),
+            ),
+     child: 
+    PopupMenuButton<SampleItem>(
       icon: const Icon(Icons.more_vert, size: 20, color: Colors.black),
       onSelected: (value) {
         switch (value) {
@@ -136,17 +170,18 @@ class NoteCard extends StatelessWidget {
             ],
           ),
         ),
-        const PopupMenuItem(
+        PopupMenuItem(
           value: SampleItem.itemThree,
           child: Row(
             children: [
-              Icon(Icons.edit, color: Colors.black),
-              SizedBox(width: 8),
-              Text('Düzenle'),
+              Icon(Icons.edit, color: isDarkMode ? Colors.white : Colors.black87),
+              const SizedBox(width: 8),
+              const Text('Düzenle'),
             ],
           ),
         )
       ],
+    )
     );
   }
 }

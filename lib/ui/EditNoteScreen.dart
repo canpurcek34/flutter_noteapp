@@ -1,44 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/date_symbol_data_local.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 class EditNoteScreen extends StatefulWidget {
   final Map<String, dynamic> note;
-
-  const EditNoteScreen({super.key, required this.note});
+  const EditNoteScreen({Key? key, required this.note}) : super(key: key);
 
   @override
   _EditNoteScreenState createState() => _EditNoteScreenState();
 }
 
 class _EditNoteScreenState extends State<EditNoteScreen> {
-  final _titleController = TextEditingController();
-  final _noteController = TextEditingController();
-  late String _date;
-  String? formattedDate;
+  late final TextEditingController _titleController;
+  late final TextEditingController _noteController;
   bool _isDarkMode = false;
   bool _isLoading = false;
   String selectedMode = "Açık Mod";
+  late Future<bool> _themePreferenceFuture;
+  final _formKey = GlobalKey<FormState>();
+
 
 
   @override
   void initState() {
     super.initState();
-    _titleController.text = widget.note['title'] ?? '';
-    _noteController.text = widget.note['note'] ?? '';
-    _date = widget.note['date'] ?? '';
-    _loadThemePreference();
+    _titleController = TextEditingController(text: widget.note['title'] ?? '');
+    _noteController = TextEditingController(text: widget.note['note'] ?? '');
+    _themePreferenceFuture = _loadThemePreference();
   }
-    // Theme preference yükleme metodu
-  Future<void> _loadThemePreference() async {
+
+  @override
+  void dispose() {
+    _titleController.dispose();
+    _noteController.dispose();
+    super.dispose();
+  }
+
+  // Theme preference yükleme metodu
+  Future<bool> _loadThemePreference() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _isDarkMode = prefs.getBool('isDarkMode') ?? false;
-      selectedMode = _isDarkMode ? "Açık Mod" : "Koyu Mod";
-    });
+    setState(() => _isDarkMode = prefs.getBool('isDarkMode') ?? false);
+    return _isDarkMode;
   }
 
   // Theme preference kaydetme metodu
@@ -57,194 +62,191 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
   }
 
   Future<void> updateNote() async {
-    await initializeDateFormatting('tr_TR', null);
-    final now = DateTime.now();
-    formattedDate = DateFormat('d MMMM y HH:mm', 'tr_TR').format(now);
+    if (_isLoading) return;
 
-    final response = await http.post(
-      Uri.parse(
-          'https://emrecanpurcek.com.tr/projects/methods/note/update.php'),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTF-8',
-      },
-      body: jsonEncode(<String, String>{
-        'id': widget.note['id'].toString(),
-        'title': _titleController.text,
-        'note': _noteController.text,
-        'date': formattedDate ?? now.toString(),
-      }),
-    );
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      await initializeDateFormatting('tr_TR', null);
 
-    final data = json.decode(response.body);
+      final now = DateTime.now();
+      final formattedDate = DateFormat('d MMMM y HH:mm', 'tr_TR').format(now);
 
-    if (data['success'] == 1) {
-      // Güncelleme başarılı, NotebookScreen'e geri dönüyoruz
-      Navigator.pop(context, true);
-
-      // Snackbar ile mesaj göster
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Not güncellendi.'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-        ),
+      final response = await http.post(
+        Uri.parse(
+            'https://emrecanpurcek.com.tr/projects/methods/note/update.php'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'id': widget.note['id'].toString(),
+          'title': _titleController.text,
+          'note': _noteController.text,
+          'date': formattedDate
+        }),
       );
-    } else {
-      // Güncelleme başarısız, kullanıcıya hata mesajı göster
+
+      final data = json.decode(response.body);
+
+      if (data['success'] == 1) {
+        Navigator.pop(context, true);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Not güncellendi.'),
+            backgroundColor: Colors.green.shade600,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Hata: ${data['message']}'),
+            backgroundColor: Colors.red.shade600,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Hata: ${data['message']}'),
-          backgroundColor: Colors.red,
+          content: Text('Bir hata oluştu: $e'),
+          backgroundColor: Colors.red.shade600,
           behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 3),
         ),
       );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
+
   // Material Design Color Palette
   ColorScheme _getColorScheme(bool isDarkMode) {
-    return isDarkMode 
-      ? ColorScheme.dark(
-          primary: Colors.cyan.shade300,
-          secondary: Colors.cyanAccent.shade200,
-          surface: Colors.grey.shade800,
-          background: Colors.grey.shade900,
-        )
-      : ColorScheme.light(
-          primary: Colors.cyan,
-          secondary: Colors.cyanAccent,
-          surface: Colors.white,
-          background: Colors.white,
-        );
+    return isDarkMode
+        ? ColorScheme.dark(
+            primary: Colors.cyan.shade300,
+            secondary: Colors.cyanAccent.shade200,
+            surface: Colors.grey.shade800,
+            background: Colors.grey.shade900,
+          )
+        : ColorScheme.light(
+            primary: Colors.cyan,
+            secondary: Colors.cyanAccent,
+            surface: Colors.white,
+            background: Colors.white,
+          );
   }
 
-   @override
+  @override
   Widget build(BuildContext context) {
-    final colorScheme = _getColorScheme(_isDarkMode);
+    return FutureBuilder<bool>(
+      future: _themePreferenceFuture,
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const CircularProgressIndicator();
 
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: colorScheme,
-        brightness: _isDarkMode ? Brightness.dark : Brightness.light,
-        textTheme: TextTheme(
-          bodyMedium: TextStyle(
-            color: colorScheme.onSurface,
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          // TextField için stil
-          filled: true,
-          fillColor: colorScheme.surface,
-          labelStyle: TextStyle(color: colorScheme.primary),
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: colorScheme.primary.withOpacity(0.5)),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: colorScheme.primary, width: 2),
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-      ),
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text('Düzenle'),
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
-            onPressed: () {
-              Navigator.pop(context);
-            },
-          ),
-          actions: [
-            Row(
-              mainAxisSize: MainAxisSize.min, // Gereksiz boşluğu önler
-              children: [
-                Text(
-                  selectedMode,
-                  style: TextStyle(
-                    color: _isDarkMode ? Colors.white70 : Colors.black87,
-                    fontWeight: FontWeight.w500,
+        return Theme(
+          data: _isDarkMode
+              ? ThemeData.dark().copyWith(
+                  primaryColor: Colors.cyan,
+                  scaffoldBackgroundColor: Colors.grey[900],
+                  appBarTheme: AppBarTheme(
+                    backgroundColor: Colors.grey[850],
+                    elevation: 0,
                   ),
-                ),
-                Switch.adaptive(
-                  // Platformlara duyarlı switch
-                  value: _isDarkMode,
-                  onChanged: (_) => _toggleTheme(),
-                  activeColor: Colors.cyan,
-                ),
-              ],
-            ),
-            const SizedBox(width: 8), // Daha ince boşluk
-          ],
-        ),
-        body: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Card(
-                   elevation: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(6.0),
-                  child: TextField(
-                    controller: _titleController,
-                    maxLines: null,
-                    keyboardType: TextInputType.multiline,
+                  inputDecorationTheme: InputDecorationTheme(
+                    filled: true,
+                    fillColor: Colors.grey[800],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
-                )),
-                const SizedBox(height: 16),
-                Card(
-                   elevation: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(6.0),
-                  child: TextField(
-                    controller: _noteController,
-                    maxLines: null,
-                    keyboardType: TextInputType.multiline,
+                )
+              : ThemeData.light().copyWith(
+                  primaryColor: Colors.cyan,
+                  appBarTheme: const AppBarTheme(
+                    backgroundColor: Colors.cyan,
+                    elevation: 0,
                   ),
-                )),
-                const SizedBox(height: 16),
-                Card(
-                  elevation: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Text(
-                      'Düzenlenme Zamanı: $_date',
-                      style: TextStyle(
-                        fontSize: 14, 
-                        color: colorScheme.onSurface.withOpacity(0.7),
-                      ),
+                  inputDecorationTheme: InputDecorationTheme(
+                    filled: true,
+                    fillColor: Colors.grey[100],
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide.none,
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: _isLoading ? null : updateNote,
-                  child: _isLoading 
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
+          child: Scaffold(
+            appBar: AppBar(
+              title: const Text('Düzenle'),
+            ),
+            body: SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16.0),
+                child: Form(
+                  key: _formKey,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      TextFormField(
+                        controller: _titleController,
+                        decoration: const InputDecoration(
+                          //labelText: 'Başlık',
                         ),
-                      )
-                    : const Text('Kaydet'),
+                        validator: (value) =>
+                            value?.isEmpty ?? true ? 'Başlık giriniz' : null,
+                        textInputAction: TextInputAction.next,
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _noteController,
+                        decoration: const InputDecoration(
+                          //labelText: 'Not',
+                          alignLabelWithHint: true,
+                        ),
+                        maxLines: 8,
+                        textInputAction: TextInputAction.newline,
+                        validator: (value) =>
+                            value?.isEmpty ?? true ? 'Not giriniz' : null,
+                      ),
+                      const SizedBox(height: 24),
+                      ElevatedButton(
+                        onPressed: _isLoading ? null : updateNote,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: _isLoading
+                            ? const SizedBox(
+                                height: 20,
+                                width: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
+                                ),
+                              )
+                            : const Text(
+                                'Kaydet',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                      ),
+                    ],
+                  ),
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }

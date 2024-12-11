@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import '../widgets/NoteCard.dart';
 
+// ignore: must_be_immutable
 class NotesTab extends StatelessWidget {
   final List<dynamic> notes;
   final Function(String id) onDelete;

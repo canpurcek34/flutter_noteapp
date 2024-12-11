@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_noteapp/authpages/AuthScreen.dart';
-import 'package:flutter_noteapp/authpages/LoginScreen.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
+import 'package:intl/date_symbol_data_local.dart';
+import 'package:intl/intl.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../service/AppService.dart';
@@ -66,7 +67,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       elevation: 4,
       leading: Builder(
         builder: (context) => IconButton(
-          icon: Icon(Icons.menu),
+          icon: const Icon(Icons.menu),
           onPressed: () => Scaffold.of(context).openDrawer(),
         ),
       ),
@@ -193,11 +194,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       await FirebaseAuth.instance.signOut();
       // Navigate to login screen and remove all previous routes
       Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const AuthScreen(),
-                    ),
-                  );
+        context,
+        MaterialPageRoute(
+          builder: (context) => const AuthScreen(),
+        ),
+      );
     } catch (e) {
       // Show error message if logout fails
       ScaffoldMessenger.of(context).showSnackBar(
@@ -257,11 +258,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 backgroundColor: Colors.grey[850],
                 elevation: 4,
               ),
-              colorScheme: ColorScheme.dark(
+              colorScheme: const ColorScheme.dark(
                 primary: Colors.cyan,
                 secondary: Colors.cyanAccent,
               ),
-              floatingActionButtonTheme: FloatingActionButtonThemeData(
+              floatingActionButtonTheme: const FloatingActionButtonThemeData(
                 backgroundColor: Colors.cyan,
               ),
             )
@@ -271,11 +272,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 backgroundColor: Colors.cyan,
                 elevation: 4,
               ),
-              colorScheme: ColorScheme.light(
+              colorScheme: const ColorScheme.light(
                 primary: Colors.cyan,
                 secondary: Colors.cyanAccent,
               ),
-              floatingActionButtonTheme: FloatingActionButtonThemeData(
+              floatingActionButtonTheme: const FloatingActionButtonThemeData(
                 backgroundColor: Colors.cyan,
               ),
             ),
@@ -420,8 +421,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _colors['flutterColor'] = colorNames[colorName] ?? Colors.white;
       }
 
+      await initializeDateFormatting('tr_TR', null);
+      final DateFormat formatter = DateFormat('d MMMM y HH:mm', 'tr_TR');
+      
       setState(() {
-        _lists = lists..sort((a, b) => b['date'].compareTo(a['date']));
+        // Listeleri createdAt alanına göre sırala (en yeni önce)
+        _lists = lists..sort((a, b) {
+        DateTime dateA = formatter.parse(a['date']);
+        DateTime dateB = formatter.parse(b['date']);
+        return dateB.compareTo(dateA);
+      });
         _filteredLists = _lists;
         isLoading = false;
       });
@@ -486,7 +495,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       await fetchLists();
 
       // Kısa bir süre sonra animasyonu durdur
-      await Future.delayed(Duration(seconds: 1), () {
+      await Future.delayed(const Duration(seconds: 1), () {
         _refreshAnimationController.stop();
         _refreshController.refreshCompleted();
       });
@@ -502,7 +511,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     return RotationTransition(
       turns: _refreshAnimationController,
       child: IconButton(
-        icon: Icon(Icons.refresh),
+        icon: const Icon(Icons.refresh),
         onPressed: _onRefresh,
       ),
     );

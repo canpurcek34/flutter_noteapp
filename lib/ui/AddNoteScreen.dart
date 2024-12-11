@@ -39,7 +39,8 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
   Future<void> _initializeDate() async {
     await initializeDateFormatting('tr_TR', null);
     setState(() {
-      _formattedDate = DateFormat.yMMMMd('tr_TR').add_jm().format(DateTime.now());
+      _formattedDate =
+          DateFormat.yMMMMd('tr_TR').add_jm().format(DateTime.now());
     });
   }
 
@@ -71,7 +72,8 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
       if (user == null) throw Exception("User not authenticated");
 
       final response = await http.post(
-        Uri.parse('https://emrecanpurcek.com.tr/projects/methods/note/insert.php'),
+        Uri.parse(
+            'https://emrecanpurcek.com.tr/projects/methods/note/insert.php'),
         headers: {'Content-Type': 'application/json; charset=UTF-8'},
         body: jsonEncode({
           'uuid': user.uid,
@@ -150,25 +152,6 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
           child: Scaffold(
             appBar: AppBar(
               title: const Text('Yeni Not Ekle'),
-              actions: [
-                Row(
-                  children: [
-                    Text(
-                      'Dark Mode',
-                      style: TextStyle(
-                        color: _isDarkMode ? Colors.white : Colors.black,
-                      ),
-                    ),
-                    Switch.adaptive(
-                      value: _isDarkMode,
-                      onChanged: (_) => _toggleTheme(),
-                      activeColor: Colors.white,
-                      activeTrackColor: Colors.cyan,
-                    ),
-                  ],
-                ),
-                const SizedBox(width: 10),
-              ],
             ),
             body: SafeArea(
               child: SingleChildScrollView(
@@ -216,8 +199,8 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  valueColor:
-                                      AlwaysStoppedAnimation<Color>(Colors.white),
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white),
                                 ),
                               )
                             : const Text(

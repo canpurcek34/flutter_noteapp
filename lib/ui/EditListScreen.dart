@@ -21,7 +21,6 @@ class _EditListScreenState extends State<EditListScreen> {
   bool _isLoading = false;
   String selectedMode = "Açık Mod";
 
-
   @override
   void initState() {
     super.initState();
@@ -73,7 +72,8 @@ class _EditListScreenState extends State<EditListScreen> {
       final formattedDate = DateFormat('d MMMM y HH:mm', 'tr_TR').format(now);
 
       final response = await http.post(
-        Uri.parse('https://emrecanpurcek.com.tr/projects/methods/list/update.php'),
+        Uri.parse(
+            'https://emrecanpurcek.com.tr/projects/methods/list/update.php'),
         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
         },
@@ -124,19 +124,19 @@ class _EditListScreenState extends State<EditListScreen> {
 
   // Material Design Color Palette
   ColorScheme _getColorScheme(bool isDarkMode) {
-    return isDarkMode 
-      ? ColorScheme.dark(
-          primary: Colors.cyan.shade300,
-          secondary: Colors.cyanAccent.shade200,
-          surface: Colors.grey.shade800,
-          background: Colors.grey.shade900,
-        )
-      : ColorScheme.light(
-          primary: Colors.cyan,
-          secondary: Colors.cyanAccent,
-          surface: Colors.white,
-          background: Colors.white,
-        );
+    return isDarkMode
+        ? ColorScheme.dark(
+            primary: Colors.cyan.shade300,
+            secondary: Colors.cyanAccent.shade200,
+            surface: Colors.grey.shade800,
+            background: Colors.grey.shade900,
+          )
+        : ColorScheme.light(
+            primary: Colors.cyan,
+            secondary: Colors.cyanAccent,
+            surface: Colors.white,
+            background: Colors.white,
+          );
   }
 
   @override
@@ -158,14 +158,8 @@ class _EditListScreenState extends State<EditListScreen> {
           filled: true,
           fillColor: colorScheme.surface,
           labelStyle: TextStyle(color: colorScheme.primary),
-          enabledBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: colorScheme.primary.withOpacity(0.5)),
-            borderRadius: BorderRadius.circular(4),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: colorScheme.primary, width: 2),
-            borderRadius: BorderRadius.circular(12),
-          ),
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
@@ -186,28 +180,6 @@ class _EditListScreenState extends State<EditListScreen> {
               Navigator.pop(context);
             },
           ),
-          actions: [
-            Row(
-              children: [
-                Text(
-                  selectedMode, 
-                  style: TextStyle(color: colorScheme.onSurface),
-                ),
-                Switch(
-                  value: _isDarkMode,
-                  onChanged: (_) => _toggleTheme(),
-                  activeColor: colorScheme.secondary,
-                  trackColor: MaterialStateProperty.resolveWith((states) {
-                    if (states.contains(MaterialState.selected)) {
-                      return colorScheme.secondary.withOpacity(0.5);
-                    }
-                    return Colors.grey.shade500;
-                  }),
-                ),
-              ],
-            ),
-            const SizedBox(width: 10),
-          ],
         ),
         body: SingleChildScrollView(
           child: Padding(
@@ -215,16 +187,13 @@ class _EditListScreenState extends State<EditListScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Card(
-                   elevation: 2,
-                  child: Padding(
-                    padding: const EdgeInsets.all(6.0),
-                  child: TextField(
-                    controller: _listController,
-                    maxLines: null,
-                    keyboardType: TextInputType.multiline,
+                TextFormField(
+                  controller: _listController,
+                  decoration: const InputDecoration(
+                    labelText: 'Liste',
+                    hintText: 'Listeyi giriniz',
                   ),
-                )),
+                ),
                 const SizedBox(height: 16),
                 Card(
                   elevation: 2,
@@ -233,7 +202,7 @@ class _EditListScreenState extends State<EditListScreen> {
                     child: Text(
                       'Düzenlenme Zamanı: $_originalDate',
                       style: TextStyle(
-                        fontSize: 14, 
+                        fontSize: 14,
                         color: colorScheme.onSurface.withOpacity(0.7),
                       ),
                     ),
@@ -242,15 +211,15 @@ class _EditListScreenState extends State<EditListScreen> {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: _isLoading ? null : _updateList,
-                  child: _isLoading 
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                        ),
-                      )
-                    : const Text('Kaydet'),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : const Text('Kaydet'),
                 ),
               ],
             ),

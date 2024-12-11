@@ -3,6 +3,7 @@ import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
 import 'ListCard.dart';
 
+// ignore: must_be_immutable
 class ListsTab extends StatelessWidget {
   final List<dynamic> lists;
   final Function(String id) onDelete;
