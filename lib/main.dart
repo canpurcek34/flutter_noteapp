@@ -1,7 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_noteapp/ui/DesktopNotebookScreen.dart';
-import 'package:flutter_noteapp/ui/MobileNotebookScreen.dart';
+import 'package:flutter_noteapp/ui/HomeScreen.dart';
 
 import 'authpages/AuthScreen.dart';
 import 'authpages/LoginScreen.dart';
@@ -35,22 +34,5 @@ class NotebookApp extends StatelessWidget {
         '/home': (context) => const HomeScreen()
       },
     );
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-
-    if (screenWidth < 600) {
-      // Mobil ekran
-      return const MobileNotebookScreen();
-    } else {
-      // Masaüstü ekran
-      return const DesktopNotebookScreen();
-    }
   }
 }

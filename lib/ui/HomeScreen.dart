@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:flutter_noteapp/authpages/AuthScreen.dart';
+import 'package:flutter_noteapp/authpages/LoginScreen.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,16 +12,16 @@ import 'AddListScreen.dart';
 import 'AddNoteScreen.dart';
 import 'EditListScreen.dart';
 import 'EditNoteScreen.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class DesktopNotebookScreen extends StatefulWidget {
-  const DesktopNotebookScreen({super.key});
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
 
   @override
-  _DesktopNotebookScreenState createState() => _DesktopNotebookScreenState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
-    with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
   List<dynamic> _filteredNotes = [];
@@ -35,6 +37,7 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
   String? formattedDate;
   final RefreshController _refreshController =
       RefreshController(initialRefresh: true);
+  late AnimationController _refreshAnimationController;
 
   @override
   void initState() {
@@ -43,12 +46,17 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
     fetchNotes();
     fetchLists();
     _tabController = TabController(length: 2, vsync: this);
+    _refreshAnimationController = AnimationController(
+      duration: const Duration(seconds: 1),
+      vsync: this,
+    );
   }
 
   @override
   void dispose() {
     _tabController.dispose();
     _searchController.dispose();
+    _refreshAnimationController.dispose();
     super.dispose();
   }
 
@@ -88,11 +96,7 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
             });
           },
         ),
-        Switch.adaptive(
-          value: isDarkMode,
-          onChanged: (_) => _toggleTheme(),
-          activeColor: Colors.cyan,
-        ),
+        _buildRefreshButton(),
       ],
       bottom: TabBar(
         controller: _tabController,
@@ -171,9 +175,38 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
               Navigator.pop(context);
             },
           ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout),
+            title: const Text('Çıkış Yap'),
+            onTap: () {
+              _logout();
+            },
+          ),
         ],
       ),
     );
+  }
+
+  Future<void> _logout() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      // Navigate to login screen and remove all previous routes
+      Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const AuthScreen(),
+                    ),
+                  );
+    } catch (e) {
+      // Show error message if logout fails
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Çıkış yapılırken bir hata oluştu: ${e.toString()}'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
   }
 
 // Arama filtreleme fonksiyonu
@@ -446,15 +479,33 @@ class _DesktopNotebookScreenState extends State<DesktopNotebookScreen>
   }
 
   void _onRefresh() async {
+    // Animasyonu başlat
+    _refreshAnimationController.repeat();
     try {
-      setState(() async {
-        await fetchNotes();
-        await fetchLists();
+      await fetchNotes();
+      await fetchLists();
+
+      // Kısa bir süre sonra animasyonu durdur
+      await Future.delayed(Duration(seconds: 1), () {
+        _refreshAnimationController.stop();
         _refreshController.refreshCompleted();
-      }); // Ekstra güncellenme için
+      });
     } catch (e) {
+      _refreshAnimationController.stop();
       _refreshController.refreshFailed();
+      _showError(e.toString());
     }
+  }
+
+  // AppBar metodunda refresh ikonu için:
+  Widget _buildRefreshButton() {
+    return RotationTransition(
+      turns: _refreshAnimationController,
+      child: IconButton(
+        icon: Icon(Icons.refresh),
+        onPressed: _onRefresh,
+      ),
+    );
   }
 
   void showColorPicker(String id, Color currentColor) {
