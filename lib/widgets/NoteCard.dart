@@ -42,7 +42,7 @@ class NoteCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
       children: [
        _buildHeader(context),
-         const SizedBox(height: 8),
+         const SizedBox(height: 4),
         _buildNoteContent(context),
         const SizedBox(height: 4),
         _buildFooter(context),

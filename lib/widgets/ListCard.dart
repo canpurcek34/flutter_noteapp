@@ -54,30 +54,32 @@ class ListCard extends StatelessWidget {
   }
 
   Widget _buildCheckbox(BuildContext context) {
-  return Checkbox(
-    value: isChecked,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(4),
-      side: BorderSide(
-        color: Colors.black, // Always black border
-        width: 1.5, // Optional: slightly thicker border for visibility
+    return Theme(
+      data: ThemeData(
+        unselectedWidgetColor: Colors.black, // checkbox color
+      ), // Your color,
+      child: Checkbox(
+        value: isChecked,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(4),
+        ),
+        checkColor: Colors.black, // Check mark will always be black
+        activeColor: Colors.white, // Background remains white when checked
+        fillColor:
+            WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
+          if (states.contains(WidgetState.selected)) {
+            return Colors.white; // White background when checked
+          }
+          return Colors.transparent; // Transparent when unchecked
+        }),
+        onChanged: (bool? value) {
+          if (value != null) {
+            onCheckboxChanged(id, value);
+          }
+        },
       ),
-    ),
-    checkColor: Colors.black, // Check mark will always be black
-    activeColor: Colors.white, // Background remains white when checked
-    fillColor: MaterialStateProperty.resolveWith<Color>((Set<MaterialState> states) {
-      if (states.contains(MaterialState.selected)) {
-        return Colors.white; // White background when checked
-      }
-      return Colors.transparent; // Transparent when unchecked
-    }),
-    onChanged: (bool? value) {
-      if (value != null) {
-        onCheckboxChanged(id, value);
-      }
-    },
-  );
-}
+    );
+  }
 
   Widget _buildListItemText(BuildContext context) {
     return Expanded(

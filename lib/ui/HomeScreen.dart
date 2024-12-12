@@ -359,6 +359,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         "grey": Colors.grey,
         "purple": Colors.purple,
         "cyan": Colors.cyan,
+        "white": Colors.white
       };
 
       for (var _colors in lists) {
@@ -537,6 +538,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 Colors.grey,
                 Colors.purple,
                 Colors.cyan,
+                Colors.white
               ],
               onColorChanged: (Color color) {
                 setState(() {

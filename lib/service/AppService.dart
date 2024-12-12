@@ -160,6 +160,7 @@ class ColorService {
     "grey": Colors.grey,
     "purple": Colors.purple,
     "cyan": Colors.cyan,
+    "white": Colors.white
   };
 
   static Color parseColorByName(String? colorName) {

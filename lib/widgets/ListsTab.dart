@@ -12,6 +12,7 @@ class ListsTab extends StatelessWidget {
     "grey": Colors.grey,
     "purple": Colors.purple,
     "cyan": Colors.cyan,
+    "white": Colors.white
   };
 
   final List<dynamic> lists;
