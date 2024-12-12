@@ -24,7 +24,7 @@ class NotesTab extends StatelessWidget {
   final int crossCount;
   final Function(String id, Color color) onColorChanged;
 
-  NotesTab({
+  const NotesTab({
       super.key,
       required this.notes,
       required this.onDelete,

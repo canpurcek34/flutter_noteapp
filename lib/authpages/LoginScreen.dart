@@ -25,7 +25,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus();
   }
 
   @override
@@ -33,21 +32,6 @@ class _LoginScreenState extends State<LoginScreen> {
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
-  }
-
-  Future<void> _checkLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-
-    if (isLoggedIn) {
-      User? currentUser = _auth.currentUser;
-      if (currentUser != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      }
-    }
   }
 
   Future<void> _login() async {

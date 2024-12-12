@@ -239,7 +239,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                   // Kayıt Butonu
                   _isLoading 
-                    ? Center(
+                    ? const Center(
                         child: SpinKitChasingDots(
                           color: Colors.cyan,
                           size: 50.0,

@@ -13,7 +13,7 @@ class ListCard extends StatelessWidget {
   final bool isChecked;
 
   const ListCard({
-    Key? key,
+    super.key,
     required this.id,
     required this.listItem,
     required this.onDelete,
@@ -22,7 +22,7 @@ class ListCard extends StatelessWidget {
     required this.cardColor,
     required this.onEdit,
     required this.colorPicker,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +64,6 @@ class ListCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
         ),
         checkColor: Colors.black, // Check mark will always be black
-        activeColor: Colors.white, // Background remains white when checked
         fillColor:
             WidgetStateProperty.resolveWith<Color>((Set<WidgetState> states) {
           if (states.contains(WidgetState.selected)) {
@@ -89,7 +88,9 @@ class ListCard extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             decoration: isChecked ? TextDecoration.lineThrough : null,
-            color: Colors.black),
+            color: Colors.black,
+            fontSize: 16
+            ),
       ),
     );
   }

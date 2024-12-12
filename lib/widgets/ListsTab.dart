@@ -23,8 +23,8 @@ class ListsTab extends StatelessWidget {
   final int crossCount;
   final bool isChecked;
 
-  ListsTab({
-    Key? key,
+  const ListsTab({
+    super.key,
     required this.lists,
     required this.onDelete,
     required this.onEdit,
@@ -32,7 +32,7 @@ class ListsTab extends StatelessWidget {
     required this.onChanged,
     required this.isChecked,
     required this.onColorChanged,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

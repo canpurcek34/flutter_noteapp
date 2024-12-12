@@ -2,43 +2,65 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
+  ThemeData _currentTheme = ThemeData.light();
   bool _isDarkMode = false;
 
+  // Constructor
+  ThemeProvider() {
+    _loadTheme();
+  }
+
+  ThemeData get currentTheme => _currentTheme;
   bool get isDarkMode => _isDarkMode;
 
-  ThemeProvider() {
-    _loadThemePreference();
-  }
-
-  Future<void> _loadThemePreference() async {
+  Future<void> _loadTheme() async {
     final prefs = await SharedPreferences.getInstance();
     _isDarkMode = prefs.getBool('isDarkMode') ?? false;
-    notifyListeners();
+    _updateTheme();
   }
 
-    Future<void> toggleTheme() async {
+  Future<void> _saveThemePreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('isDarkMode', _isDarkMode);
+  }
+
+  void toggleTheme() {
     _isDarkMode = !_isDarkMode;
-      final prefs = await SharedPreferences.getInstance();
-       await prefs.setBool('isDarkMode', _isDarkMode);
+    _saveThemePreference();
+    _updateTheme();
     notifyListeners();
   }
 
-  ThemeData get currentTheme {
-    return _isDarkMode ? ThemeData.dark(useMaterial3:true).copyWith(
-             colorScheme: ColorScheme.dark(
-             primary: Colors.cyan.shade300,
-              secondary: Colors.cyanAccent.shade200,
-               surface: Colors.grey.shade800,
-                background: Colors.grey.shade900,
-            )
-             ) : ThemeData.light(useMaterial3: true).copyWith(
-               colorScheme: ColorScheme.light(
-                 primary: Colors.cyan,
-                 secondary: Colors.cyanAccent,
-                 surface: Colors.white,
-                 background: Colors.white
-             ),
-                 );
+  void _updateTheme() {
+    _currentTheme = _isDarkMode
+        ? ThemeData.dark().copyWith(
+            primaryColor: Colors.cyan,
+            scaffoldBackgroundColor: Colors.grey[900],
+            appBarTheme: AppBarTheme(
+              backgroundColor: Colors.grey[850],
+              elevation: 4,
+            ),
+            colorScheme: const ColorScheme.dark(
+              primary: Colors.cyan,
+              secondary: Colors.cyanAccent,
+            ),
+            floatingActionButtonTheme: const FloatingActionButtonThemeData(
+              backgroundColor: Colors.cyan,
+            ),
+          )
+        : ThemeData.light().copyWith(
+            primaryColor: Colors.cyan,
+            appBarTheme: const AppBarTheme(
+              backgroundColor: Colors.cyan,
+              elevation: 4,
+            ),
+            colorScheme: const ColorScheme.light(
+              primary: Colors.cyan,
+              secondary: Colors.cyanAccent,
+            ),
+            floatingActionButtonTheme: const FloatingActionButtonThemeData(
+              backgroundColor: Colors.cyan,
+            ),
+          );
   }
 }
-
