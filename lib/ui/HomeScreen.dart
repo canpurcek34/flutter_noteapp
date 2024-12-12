@@ -367,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _colors['flutterColor'] = colorNames[colorName] ?? Colors.white;
       }
 
-      await initializeDateFormatting('tr_TR', null);
+     await initializeDateFormatting('tr_TR', null);
       final DateFormat formatter = DateFormat('d MMMM y HH:mm', 'tr_TR');
       
       setState(() {
@@ -464,25 +464,21 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _filteredNotes = _notes
             .where((note) =>
                 note['title']
-                    .toString()
+                    ?.toString()
                     .toLowerCase()
-                    .contains(query.toLowerCase()) ||
+                    .contains(query.toLowerCase()) == true ||
                 note['note']
-                    .toString()
+                    ?.toString()
                     .toLowerCase()
-                    .contains(query.toLowerCase()))
+                    .contains(query.toLowerCase()) ==  true)
             .toList();
 
         _filteredLists = _lists
             .where((list) =>
-                list['title']
-                    .toString()
+                list['list']
+                    ?.toString()
                     .toLowerCase()
-                    .contains(query.toLowerCase()) ||
-                list['note']
-                    .toString()
-                    .toLowerCase()
-                    .contains(query.toLowerCase()))
+                    .contains(query.toLowerCase()) == true)
             .toList();
       }
     });
@@ -576,7 +572,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       },
     );
   }
-
   // Theme preference yükleme metodu
   Future<void> _loadThemePreference() async {
     final prefs = await SharedPreferences.getInstance();

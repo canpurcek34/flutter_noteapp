@@ -1,7 +1,8 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_noteapp/provider/theme_provider.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_noteapp/ui/HomeScreen.dart';
-
 import 'authpages/AuthScreen.dart';
 import 'authpages/LoginScreen.dart';
 import 'authpages/SignScreen.dart';
@@ -12,20 +13,24 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(NotebookApp());
+  runApp(
+     ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: const NotebookApp(),
+    ),
+   
+  );
 }
 
-// ignore: must_be_immutable
 class NotebookApp extends StatelessWidget {
-  int screenWidth = 1;
+  const NotebookApp({super.key});
 
-  NotebookApp({super.key});
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Authentication',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: Provider.of<ThemeProvider>(context).currentTheme, // Tema providerdan sağlandı
       initialRoute: '/auth',
       routes: {
         '/auth': (context) => const AuthScreen(),

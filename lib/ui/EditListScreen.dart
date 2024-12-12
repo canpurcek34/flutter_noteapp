@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_noteapp/provider/error_utils.dart';
+import 'package:flutter_noteapp/provider/theme_provider.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/date_symbol_data_local.dart';
 import 'dart:convert';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 class EditListScreen extends StatefulWidget {
   final Map<String, dynamic> list;
@@ -17,16 +18,13 @@ class EditListScreen extends StatefulWidget {
 class _EditListScreenState extends State<EditListScreen> {
   late final TextEditingController _listController;
   late final String _originalDate;
-  bool _isDarkMode = false;
   bool _isLoading = false;
-  String selectedMode = "Açık Mod";
 
   @override
   void initState() {
     super.initState();
     _listController = TextEditingController(text: widget.list['list'] ?? '');
     _originalDate = widget.list['date'] ?? '';
-    _loadThemePreference();
   }
 
   @override
@@ -34,146 +32,78 @@ class _EditListScreenState extends State<EditListScreen> {
     _listController.dispose();
     super.dispose();
   }
-
-  // Theme preference yükleme metodu
-  Future<void> _loadThemePreference() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _isDarkMode = prefs.getBool('isDarkMode') ?? false;
-      selectedMode = _isDarkMode ? "Açık Mod" : "Koyu Mod";
-    });
-  }
-
-  // Theme preference kaydetme metodu
-  Future<void> _saveThemePreference(bool value) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('isDarkMode', value);
-  }
-
-  // Theme değiştirme metodu
-  void _toggleTheme() {
-    setState(() {
-      _isDarkMode = !_isDarkMode;
-      _saveThemePreference(_isDarkMode);
-      selectedMode = _isDarkMode ? "Açık Mod" : "Koyu Mod";
-    });
-  }
-
   Future<void> _updateList() async {
-    if (_isLoading) return;
-
-    setState(() {
+    if(_isLoading) return;
+     setState(() {
       _isLoading = true;
     });
-
     try {
-      await initializeDateFormatting('tr_TR', null);
       final now = DateTime.now();
       final formattedDate = DateFormat('d MMMM y HH:mm', 'tr_TR').format(now);
 
       final response = await http.post(
-        Uri.parse(
+         Uri.parse(
             'https://emrecanpurcek.com.tr/projects/methods/list/update.php'),
-        headers: {
+         headers: {
           'Content-Type': 'application/json; charset=UTF-8',
-        },
+         },
         body: jsonEncode({
           'id': widget.list['id'].toString(),
           'list': _listController.text,
-          'date': formattedDate
+        'date': formattedDate
         }),
       );
-
-      final data = json.decode(response.body);
+       final data = json.decode(response.body);
 
       if (data['success'] == 1) {
+        if (mounted) {
         Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Not güncellendi.'),
-            backgroundColor: Colors.green.shade600,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: const Text('Not güncellendi.'),
+               backgroundColor: Colors.green.shade600,
+               behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+             ),
+            );
+          }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Hata: ${data['message']}'),
-            backgroundColor: Colors.red.shade600,
-            behavior: SnackBarBehavior.floating,
-            duration: const Duration(seconds: 3),
-          ),
-        );
+         if (mounted) {
+          ErrorUtils.showErrorSnackBar(
+              context, 'Hata: ${data['message']}');
+         }
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Bir hata oluştu: $e'),
-          backgroundColor: Colors.red.shade600,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+     if (mounted) {
+        ErrorUtils.showErrorSnackBar(
+            context, 'Bir hata oluştu: $e');
+    }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if(mounted) {
+         setState(() {
+          _isLoading = false;
+         });
+      }
     }
   }
 
-  // Material Design Color Palette
-  ColorScheme _getColorScheme(bool isDarkMode) {
-    return isDarkMode
-        ? ColorScheme.dark(
-            primary: Colors.cyan.shade300,
-            secondary: Colors.cyanAccent.shade200,
-            surface: Colors.grey.shade800,
-            background: Colors.grey.shade900,
-          )
-        : ColorScheme.light(
-            primary: Colors.cyan,
-            secondary: Colors.cyanAccent,
-            surface: Colors.white,
-            background: Colors.white,
-          );
-  }
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = _getColorScheme(_isDarkMode);
-
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: colorScheme,
-        brightness: _isDarkMode ? Brightness.dark : Brightness.light,
-        textTheme: TextTheme(
-          bodyMedium: TextStyle(
-            color: colorScheme.onSurface,
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          // TextField için stil
-          filled: true,
-          fillColor: colorScheme.surface,
-          labelStyle: TextStyle(color: colorScheme.primary),
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-        ),
-        elevatedButtonTheme: ElevatedButtonThemeData(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-      ),
-      home: Scaffold(
+    final themeProvider = Provider.of<ThemeProvider>(context);
+  return Scaffold(
         appBar: AppBar(
           title: const Text('Düzenle'),
+            actions: [
+              IconButton(
+                icon: Icon(themeProvider.isDarkMode
+                    ? Icons.light_mode
+                    : Icons.dark_mode),
+                onPressed: () {
+                  themeProvider.toggleTheme();
+                },
+              ),
+            ],
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
@@ -190,9 +120,7 @@ class _EditListScreenState extends State<EditListScreen> {
                 TextFormField(
                   controller: _listController,
                   decoration: const InputDecoration(
-                    labelText: 'Liste',
-                    hintText: 'Listeyi giriniz',
-                  ),
+                      labelText: 'Liste', hintText: 'Listeyi giriniz'),
                 ),
                 const SizedBox(height: 16),
                 Card(
@@ -203,7 +131,7 @@ class _EditListScreenState extends State<EditListScreen> {
                       'Düzenlenme Zamanı: $_originalDate',
                       style: TextStyle(
                         fontSize: 14,
-                        color: colorScheme.onSurface.withOpacity(0.7),
+                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
                       ),
                     ),
                   ),
@@ -214,18 +142,18 @@ class _EditListScreenState extends State<EditListScreen> {
                   child: _isLoading
                       ? const SizedBox(
                           width: 20,
-                          height: 20,
+                         height: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                          ),
-                        )
-                      : const Text('Kaydet'),
+                           ),
+                         )
+                     : const Text('Kaydet'),
                 ),
               ],
             ),
           ),
         ),
-      ),
-    );
+      );
   }
 }
+
