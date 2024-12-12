@@ -45,12 +45,12 @@ class ListsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int cross = crossCount;
+    int listCrossCount = crossCount;
 
     return MasonryGridView.builder(
       padding: const EdgeInsets.only(bottom: 90),
       gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: cross,
+        crossAxisCount: listCrossCount,
       ),
       itemCount: lists.length,
       itemBuilder: (context, index) {

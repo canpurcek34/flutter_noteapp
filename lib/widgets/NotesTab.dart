@@ -40,11 +40,11 @@ class NotesTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    int cross = crossCount;
+    int noteCrossCount = crossCount;
 
     return MasonryGridView.builder(
       gridDelegate: SliverSimpleGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: cross,
+        crossAxisCount: noteCrossCount,
       ),
       itemCount: notes.length,
       itemBuilder: (context, index) {

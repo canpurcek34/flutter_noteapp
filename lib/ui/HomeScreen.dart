@@ -189,65 +189,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Future<void> _logout() async {
-    try {
-      await FirebaseAuth.instance.signOut();
-      // Navigate to login screen and remove all previous routes
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const AuthScreen(),
-        ),
-      );
-    } catch (e) {
-      // Show error message if logout fails
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Çıkış yapılırken bir hata oluştu: ${e.toString()}'),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    }
-  }
-
-// Arama filtreleme fonksiyonu
-  void _filterItems(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        _filteredNotes = _notes;
-        _filteredLists = _lists;
-      } else {
-        _filteredNotes = _notes
-            .where((note) =>
-                note['title']
-                    .toString()
-                    .toLowerCase()
-                    .contains(query.toLowerCase()) ||
-                note['note']
-                    .toString()
-                    .toLowerCase()
-                    .contains(query.toLowerCase()))
-            .toList();
-
-        _filteredLists = _lists
-            .where((list) =>
-                list['title']
-                    .toString()
-                    .toLowerCase()
-                    .contains(query.toLowerCase()) ||
-                list['note']
-                    .toString()
-                    .toLowerCase()
-                    .contains(query.toLowerCase()))
-            .toList();
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
-    int crossCount = screenWidth < 600 ? 1 : 4;
+    int noteCross = screenWidth < 600 ? 2 : 4;
+    int listCross = screenWidth < 600 ? 2 : 4;
 
     return Theme(
       data: isDarkMode
@@ -337,7 +283,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             controller: _tabController,
             children: [
               NotesTab(
-                crossCount: crossCount,
+                crossCount: noteCross,
                 notes: _isSearching ? _filteredNotes : _notes,
                 onDelete: deleteNote,
                 onEdit: (id) async {
@@ -370,7 +316,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   );
                   if (result == true) fetchLists();
                 },
-                crossCount: crossCount,
+                crossCount: listCross,
                 onChanged: (String id, bool value) {
                   setState(() {
                     updateCheckbox(id, value);
@@ -487,6 +433,60 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
+  Future<void> _logout() async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      // Navigate to login screen and remove all previous routes
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => const AuthScreen(),
+        ),
+      );
+    } catch (e) {
+      // Show error message if logout fails
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Çıkış yapılırken bir hata oluştu: ${e.toString()}'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+// Arama filtreleme fonksiyonu
+  void _filterItems(String query) {
+    setState(() {
+      if (query.isEmpty) {
+        _filteredNotes = _notes;
+        _filteredLists = _lists;
+      } else {
+        _filteredNotes = _notes
+            .where((note) =>
+                note['title']
+                    .toString()
+                    .toLowerCase()
+                    .contains(query.toLowerCase()) ||
+                note['note']
+                    .toString()
+                    .toLowerCase()
+                    .contains(query.toLowerCase()))
+            .toList();
+
+        _filteredLists = _lists
+            .where((list) =>
+                list['title']
+                    .toString()
+                    .toLowerCase()
+                    .contains(query.toLowerCase()) ||
+                list['note']
+                    .toString()
+                    .toLowerCase()
+                    .contains(query.toLowerCase()))
+            .toList();
+      }
+    });
+  }
   void _onRefresh() async {
     // Animasyonu başlat
     _refreshAnimationController.repeat();

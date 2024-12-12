@@ -70,7 +70,7 @@ class NoteCard extends StatelessWidget {
               fontSize: 16,
               fontWeight: FontWeight.bold,
             ),
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
         ),
@@ -85,7 +85,7 @@ class NoteCard extends StatelessWidget {
       style: const TextStyle(
         fontSize: 14,
         color: Colors.black),
-      maxLines: 3, // Maks 3 satır
+      maxLines: 5,
       overflow: TextOverflow.ellipsis,
     );
   }

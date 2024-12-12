@@ -74,7 +74,7 @@ class ListCard extends StatelessWidget {
     return Expanded(
       child: Text(
         listItem,
-        maxLines: 2,
+        maxLines: 3,
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           color: isChecked ? Colors.black : Colors.black, //renk değişim düzenlemeleri yapılabilir
