@@ -156,8 +156,6 @@ class ColorService {
     "blue": Colors.blue,
     "green": Colors.green,
     "yellow": Colors.yellow,
-    "black": Colors.black,
-    "white": Colors.white,
     "orange": Colors.orange,
     "grey": Colors.grey,
     "purple": Colors.purple,
