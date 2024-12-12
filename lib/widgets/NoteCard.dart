@@ -2,186 +2,155 @@ import 'package:flutter/material.dart';
 
 enum SampleItem { itemOne, itemTwo, itemThree }
 
-// ignore: must_be_immutable
 class NoteCard extends StatelessWidget {
-  final String id; // Not ID'si
+  final String id;
   final String title;
   final String note;
   final String dateTime;
   final Color cardColor;
-  final Function(String, Color) colorPicker;
-  final Function(String) onDelete; // Silme işlemi için callback
-  final Function(String) onEdit; // Düzenleme işlemi için callback
-  //final Function(String, Color) onColorChange; // Renk değiştirme callback
+   final Function(String, Color) colorPicker;
+  final Function(String) onDelete;
+  final Function(String) onEdit;
 
-  NoteCard({
+  const NoteCard({
+    Key? key,
     required this.id,
     required this.title,
     required this.note,
     required this.dateTime,
-    required this.onDelete, // Silme işlemi için callback'i al
-    required this.onEdit, // Düzenleme işlemi için callback'i al
-    //required this.onColorChange, // Renk değiştirme callback'i al
-    required this.cardColor,
-    super.key, required this.colorPicker,
-  });
+    required this.onDelete,
+    required this.onEdit,
+     required this.cardColor,
+     required this.colorPicker,
+  }) : super(key: key);
 
-  bool isDarkMode = false;
-
- 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      color: cardColor,
+     return Card(
+       color: cardColor,
+       shape: RoundedRectangleBorder(
+         borderRadius: BorderRadius.circular(12),
+         side: BorderSide(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3)),
+      ),
+      elevation: 2,
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey.withOpacity(0.3)),
-      ),
-      elevation: 2, // Hafif bir gölgelendirme
-      child: InkWell(
+       child: InkWell(
         onTap: () => onEdit(id),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 8),
-              _buildNoteContent(),
-              const SizedBox(height: 4),
-              _buildFooter(),
-            ],
-          ),
-        ),
+    child: Padding(
+     padding: const EdgeInsets.all(12),
+    child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+       _buildHeader(context),
+         const SizedBox(height: 8),
+        _buildNoteContent(context),
+        const SizedBox(height: 4),
+        _buildFooter(context),
+        ],
+       ),
       ),
-    );
+     ),
+       
+   
+       
+  );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+     mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
-          child: Text(
+        child: Text(
             title,
-            style: const TextStyle(
-              color: Colors.black,
-              fontSize: 16,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            fontSize: 16,
               fontWeight: FontWeight.bold,
-            ),
+               color:  Colors.black,
+           ),
             maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
+             overflow: TextOverflow.ellipsis,
+       ),
         ),
-        _buildOptionsMenu(),
+      _buildOptionsMenu(context),
       ],
-    );
-  }
+        
+        
+     );
+ }
 
-  Widget _buildNoteContent() {
+  Widget _buildNoteContent(BuildContext context) {
     return Text(
       note,
-      style: const TextStyle(
-        fontSize: 14,
-        color: Colors.black),
-      maxLines: 5,
-      overflow: TextOverflow.ellipsis,
-    );
-  }
+     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+         fontSize: 14,
+         color: Colors.black
+    ),
+    maxLines: 5,
+    overflow: TextOverflow.ellipsis,
+   );
+ }
 
-  Widget _buildFooter() {
+  Widget _buildFooter(BuildContext context) {
     return Text(
       dateTime,
-      style: TextStyle(
-        color: Colors.black.withOpacity(0.6),
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
         fontSize: 12,
+         color: Colors.black
       ),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    );
-  }
+    maxLines: 1,
+    overflow: TextOverflow.ellipsis,
+  );
+}
 
-  Widget _buildOptionsMenu() {
-    return Theme(data: isDarkMode
-          ? ThemeData.dark().copyWith(
-              primaryColor: Colors.cyan,
-              scaffoldBackgroundColor: Colors.grey[900],
-              appBarTheme: AppBarTheme(
-                backgroundColor: Colors.grey[850],
-                elevation: 4,
-              ),
-              colorScheme: const ColorScheme.dark(
-                primary: Colors.cyan,
-                secondary: Colors.cyanAccent,
-              ),
-              floatingActionButtonTheme: const FloatingActionButtonThemeData(
-                backgroundColor: Colors.cyan,
-              ),
-            )
-          : ThemeData.light().copyWith(
-              primaryColor: Colors.cyan,
-              appBarTheme: const AppBarTheme(
-                backgroundColor: Colors.cyan,
-                elevation: 4,
-              ),
-              colorScheme: const ColorScheme.light(
-                primary: Colors.cyan,
-                secondary: Colors.cyanAccent,
-              ),
-              floatingActionButtonTheme: const FloatingActionButtonThemeData(
-                backgroundColor: Colors.cyan,
-              ),
+  Widget _buildOptionsMenu(BuildContext context) {
+    return  PopupMenuButton<SampleItem>(
+     icon: const Icon(Icons.more_vert, size: 20, color: Colors.black),
+        onSelected: (value) {
+            switch (value) {
+            case SampleItem.itemOne:
+                onDelete(id);
+                 break;
+            case SampleItem.itemTwo:
+              colorPicker(id, cardColor);
+              break;
+            case SampleItem.itemThree:
+                 onEdit(id);
+                break;
+             }
+        },
+          itemBuilder: (context) => [
+           PopupMenuItem(
+               value: SampleItem.itemOne,
+               child: Row(
+                children: [
+                  const Icon(Icons.delete, color: Colors.red),
+                   const SizedBox(width: 8),
+                     Text('Delete', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+                 ],
+                ),
             ),
-     child: 
-    PopupMenuButton<SampleItem>(
-      icon: const Icon(Icons.more_vert, size: 20, color: Colors.black),
-      onSelected: (value) {
-        switch (value) {
-          case SampleItem.itemOne:
-            onDelete(id);
-            break;
-          case SampleItem.itemTwo:
-            colorPicker(id, cardColor);
-            break;
-          case SampleItem.itemThree:
-            onEdit(id);
-            break;
-        }
-      },
-      itemBuilder: (context) => [
-        const PopupMenuItem(
-          value: SampleItem.itemOne,
-          child: Row(
-            children: [
-              Icon(Icons.delete, color: Colors.red),
-              SizedBox(width: 8),
-              Text('Delete'),
-            ],
-          ),
+          PopupMenuItem(
+              value: SampleItem.itemTwo,
+             child:  Row(
+                children: [
+                const  Icon(Icons.color_lens, color: Colors.blue),
+                const  SizedBox(width: 8),
+                 Text('Change Color', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+                ],
+           ),
         ),
-        const PopupMenuItem(
-          value: SampleItem.itemTwo,
-          child: Row(
+       PopupMenuItem(
+           value: SampleItem.itemThree,
+          child:  Row(
             children: [
-              Icon(Icons.color_lens, color: Colors.blue),
-              SizedBox(width: 8),
-              Text('Change Color'),
-            ],
-          ),
-        ),
-        PopupMenuItem(
-          value: SampleItem.itemThree,
-          child: Row(
-            children: [
-              Icon(Icons.edit, color: isDarkMode ? Colors.white : Colors.black87),
-              const SizedBox(width: 8),
-              const Text('Düzenle'),
-            ],
-          ),
-        )
+             Icon(Icons.edit, color: Theme.of(context).colorScheme.onSurface),
+               const SizedBox(width: 8),
+                Text('Düzenle', style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+         ],
+         ),
+       ),
       ],
-    )
-    );
-  }
+     );
+   }
 }

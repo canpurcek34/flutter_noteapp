@@ -1,11 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_noteapp/provider/error_utils.dart';
-import 'package:flutter_noteapp/provider/theme_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
 class AddNoteScreen extends StatefulWidget {
   const AddNoteScreen({super.key});
@@ -69,21 +67,9 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
 
   @override
   Widget build(BuildContext context) {
-      final themeProvider = Provider.of<ThemeProvider>(context);
-
-
     return Scaffold(
         appBar: AppBar(
           title: const Text('Yeni Not Ekle'),
-         actions: [
-            IconButton(
-              icon: Icon(
-                  themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
-             onPressed: () {
-                themeProvider.toggleTheme();
-              },
-            ),
-          ],
         ),
         body: SafeArea(
           child: SingleChildScrollView(
@@ -95,9 +81,16 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                 children: [
                   TextFormField(
                     controller: _titleController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                        labelText: 'Başlık',
                        hintText: 'Not başlığını giriniz',
+                            filled: true,
+                           fillColor: Theme.of(context).colorScheme.surface,
+                    border: OutlineInputBorder(
+                       borderRadius: BorderRadius.circular(12),
+                       borderSide: BorderSide.none,
+                   ),      
+
                     ),
                     validator: (value) =>
                         value?.isEmpty ?? true ? 'Başlık giriniz' : null,
@@ -106,12 +99,19 @@ class _AddNoteScreenState extends State<AddNoteScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _noteController,
-                    decoration: const InputDecoration(
+                    decoration:  InputDecoration(
                       labelText: 'Not',
                        hintText: 'Notunuzu giriniz',
                        alignLabelWithHint: true,
+                          filled: true,
+                           fillColor: Theme.of(context).colorScheme.surface,
+                    border: OutlineInputBorder(
+                       borderRadius: BorderRadius.circular(12),
+                       borderSide: BorderSide.none,
+                     ),      
+
                     ),
-                    maxLines: 8,
+                       maxLines: 8,
                     textInputAction: TextInputAction.newline,
                     validator: (value) =>
                         value?.isEmpty ?? true ? 'Not giriniz' : null,

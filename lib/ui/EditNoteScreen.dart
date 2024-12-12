@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_noteapp/provider/error_utils.dart';
-import 'package:flutter_noteapp/provider/theme_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
 class EditNoteScreen extends StatefulWidget {
   final Map<String, dynamic> note;
@@ -86,24 +84,11 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-     final themeProvider = Provider.of<ThemeProvider>(context);
-
    return  Scaffold(
         appBar: AppBar(
           title: const Text('Düzenle'),
-            actions: [
-              IconButton(
-                icon: Icon(themeProvider.isDarkMode
-                    ? Icons.light_mode
-                    : Icons.dark_mode),
-             onPressed: () {
-                  themeProvider.toggleTheme();
-                },
-              ),
-            ],
         ),
         body: SafeArea(
           child: SingleChildScrollView(
@@ -113,9 +98,15 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                 TextFormField(
+                   TextFormField(
                     controller: _titleController,
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
+                            filled: true,
+                           fillColor: Theme.of(context).colorScheme.surface,
+                    border: OutlineInputBorder(
+                       borderRadius: BorderRadius.circular(12),
+                       borderSide: BorderSide.none,
+                   ),      
                  ),
                     validator: (value) =>
                         value?.isEmpty ?? true ? 'Başlık giriniz' : null,
@@ -124,10 +115,17 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
                   const SizedBox(height: 16),
                   TextFormField(
                     controller: _noteController,
-                   decoration: const InputDecoration(
+                   decoration: InputDecoration(
                        alignLabelWithHint: true,
-                      ),
-                    maxLines: 8,
+                     filled: true,
+                           fillColor: Theme.of(context).colorScheme.surface,
+                    border: OutlineInputBorder(
+                       borderRadius: BorderRadius.circular(12),
+                       borderSide: BorderSide.none,
+                     ),      
+
+                    ),
+                       maxLines: 8,
                     textInputAction: TextInputAction.newline,
                        validator: (value) =>
                         value?.isEmpty ?? true ? 'Not giriniz' : null,

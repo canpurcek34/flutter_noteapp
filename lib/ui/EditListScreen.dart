@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_noteapp/provider/error_utils.dart';
-import 'package:flutter_noteapp/provider/theme_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
 class EditListScreen extends StatefulWidget {
   final Map<String, dynamic> list;
@@ -87,23 +85,11 @@ class _EditListScreenState extends State<EditListScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
   return Scaffold(
         appBar: AppBar(
           title: const Text('Düzenle'),
-            actions: [
-              IconButton(
-                icon: Icon(themeProvider.isDarkMode
-                    ? Icons.light_mode
-                    : Icons.dark_mode),
-                onPressed: () {
-                  themeProvider.toggleTheme();
-                },
-              ),
-            ],
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () {
@@ -118,10 +104,17 @@ class _EditListScreenState extends State<EditListScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 TextFormField(
-                  controller: _listController,
-                  decoration: const InputDecoration(
-                      labelText: 'Liste', hintText: 'Listeyi giriniz'),
-                ),
+                    controller: _listController,
+                    decoration:  InputDecoration(
+                    hintText: 'Listeyi giriniz',
+                       filled: true,
+                           fillColor: Theme.of(context).colorScheme.surface,
+                    border: OutlineInputBorder(
+                       borderRadius: BorderRadius.circular(12),
+                       borderSide: BorderSide.none,
+                   ),      
+                    ),
+                   ),
                 const SizedBox(height: 16),
                 Card(
                   elevation: 2,

@@ -367,16 +367,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _colors['flutterColor'] = colorNames[colorName] ?? Colors.white;
       }
 
-     await initializeDateFormatting('tr_TR', null);
+      await initializeDateFormatting('tr_TR', null);
       final DateFormat formatter = DateFormat('d MMMM y HH:mm', 'tr_TR');
-      
+
       setState(() {
         // Listeleri createdAt alanına göre sırala (en yeni önce)
-        _lists = lists..sort((a, b) {
-        DateTime dateA = formatter.parse(a['date']);
-        DateTime dateB = formatter.parse(b['date']);
-        return dateB.compareTo(dateA);
-      });
+        _lists = lists
+          ..sort((a, b) {
+            DateTime dateA = formatter.parse(a['date']);
+            DateTime dateB = formatter.parse(b['date']);
+            return dateB.compareTo(dateA);
+          });
         _filteredLists = _lists;
         isLoading = false;
       });
@@ -464,13 +465,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
         _filteredNotes = _notes
             .where((note) =>
                 note['title']
-                    ?.toString()
-                    .toLowerCase()
-                    .contains(query.toLowerCase()) == true ||
+                        ?.toString()
+                        .toLowerCase()
+                        .contains(query.toLowerCase()) ==
+                    true ||
                 note['note']
-                    ?.toString()
-                    .toLowerCase()
-                    .contains(query.toLowerCase()) ==  true)
+                        ?.toString()
+                        .toLowerCase()
+                        .contains(query.toLowerCase()) ==
+                    true)
             .toList();
 
         _filteredLists = _lists
@@ -478,11 +481,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 list['list']
                     ?.toString()
                     .toLowerCase()
-                    .contains(query.toLowerCase()) == true)
+                    .contains(query.toLowerCase()) ==
+                true)
             .toList();
       }
     });
   }
+
   void _onRefresh() async {
     // Animasyonu başlat
     _refreshAnimationController.repeat();
@@ -572,6 +577,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       },
     );
   }
+
   // Theme preference yükleme metodu
   Future<void> _loadThemePreference() async {
     final prefs = await SharedPreferences.getInstance();

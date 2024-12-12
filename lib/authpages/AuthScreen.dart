@@ -125,43 +125,52 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
   }
 
   // Özel Auth Butonu Widget'ı
-  Widget _buildAuthButton(
+    Widget _buildAuthButton(
     BuildContext context, {
     required String text,
     required IconData icon,
     required VoidCallback onPressed,
     bool isPrimary = true,
   }) {
-    return FilledButton.tonal(
-      onPressed: onPressed,
-      style: FilledButton.styleFrom(
-        backgroundColor: isPrimary
-            ? Theme.of(context).colorScheme.primaryContainer
-            : Theme.of(context).colorScheme.secondaryContainer,
-        foregroundColor: isPrimary
-            ? Theme.of(context).colorScheme.onPrimaryContainer
-            : Theme.of(context).colorScheme.onSecondaryContainer,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          final screenWidth = MediaQuery.of(context).size.width;
+    final buttonWidth = screenWidth * 0.5;
+        return Align(
+          alignment: Alignment.center,
+          child: SizedBox(
+       width: buttonWidth,
+        child: FilledButton.tonal(
+           onPressed: onPressed,
+           style: FilledButton.styleFrom(
+           backgroundColor: isPrimary
+              ? Theme.of(context).colorScheme.primaryContainer
+              : Theme.of(context).colorScheme.secondaryContainer,
+          foregroundColor: isPrimary
+              ? Theme.of(context).colorScheme.onPrimaryContainer
+             : Theme.of(context).colorScheme.onSecondaryContainer,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+           ),
+         ),
+        child: Row(
+           mainAxisAlignment: MainAxisAlignment.center,
+           children: [
+              Icon(icon),
+           const SizedBox(width: 12),
+            Text(
+                  text,
+                 style: const TextStyle(
+                 fontSize: 16,
+                 fontWeight: FontWeight.w600,
+               ),
+             ),
+           ],
+         ),
         ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon),
-          const SizedBox(width: 12),
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
-      ),
-    );
+     ),
+   );
   }
+
 
   // Navigation Metotları
   void _navigateToLogin(BuildContext context) {

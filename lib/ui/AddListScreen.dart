@@ -1,11 +1,9 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_noteapp/provider/error_utils.dart';
-import 'package:flutter_noteapp/provider/theme_provider.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 
 class AddListScreen extends StatefulWidget {
   const AddListScreen({super.key});
@@ -45,7 +43,6 @@ class _AddListScreenState extends State<AddListScreen> {
          'date': _formattedDate,
         }),
       );
-
       final responseData = json.decode(response.body);
 
       if (responseData['success'] == 1) {
@@ -76,20 +73,10 @@ class _AddListScreenState extends State<AddListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Yeni Liste Ekle'),
-           actions: [
-            IconButton(
-              icon: Icon(
-                  themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
-              onPressed: () {
-                themeProvider.toggleTheme();
-              },
-            ),
-          ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -101,9 +88,15 @@ class _AddListScreenState extends State<AddListScreen> {
               children: [
                 TextFormField(
                   controller: _listController,
-                  decoration: const InputDecoration(
+                  decoration:  InputDecoration(
                      labelText: 'Liste',
-                     hintText: 'Liste içeriğini girin',
+                    hintText: 'Liste içeriğini girin',
+                    filled: true,
+                           fillColor: Theme.of(context).colorScheme.surface,
+                    border: OutlineInputBorder(
+                       borderRadius: BorderRadius.circular(12),
+                       borderSide: BorderSide.none,
+                   ),      
                   ),
                   validator: (value) =>
                       value?.isEmpty ?? true ? 'Öğe giriniz' : null,
