@@ -37,70 +37,36 @@ class NoteCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
       child: InkWell(
         onTap: () => onEdit(id),
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(context),
-              _buildNoteContent(context),
-              const SizedBox(height: 4),
-              _buildFooter(context),
-            ],
+        child: ListTile(
+          contentPadding: const EdgeInsets.all(10),
+          title: Text(
+            title,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black
+                ),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
           ),
+          subtitle: Text(
+            note,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(fontSize: 14,color: Colors.black),
+            maxLines: 3,
+            overflow: TextOverflow.ellipsis,
+            
+          ),
+          trailing: _buildOptionsMenu(context),
+          
         ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Text(
-            title,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                ),
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-        _buildOptionsMenu(context),
-      ],
-    );
-  }
-
-  Widget _buildNoteContent(BuildContext context) {
-    return Text(
-      note,
-      style: Theme.of(context)
-          .textTheme
-          .bodyMedium
-          ?.copyWith(fontSize: 14, color: Colors.black),
-      maxLines: 5,
-      overflow: TextOverflow.ellipsis,
-    );
-  }
-
-  Widget _buildFooter(BuildContext context) {
-    return Text(
-      dateTime,
-      style: Theme.of(context)
-          .textTheme
-          .bodySmall
-          ?.copyWith(fontSize: 12, color: Colors.black),
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-    );
-  }
 
   Widget _buildOptionsMenu(BuildContext context) {
     return PopupMenuButton<SampleItem>(
-      icon: const Icon(Icons.more_vert, size: 20, color: Colors.black),
+      icon: const Icon(Icons.more_vert, size: 20,color: Colors.black,),
       onSelected: (value) {
         switch (value) {
           case SampleItem.itemOne:
@@ -145,7 +111,7 @@ class NoteCard extends StatelessWidget {
             children: [
               Icon(Icons.edit, color: Theme.of(context).colorScheme.onSurface),
               const SizedBox(width: 8),
-              Text('Düzenle',
+              Text('Edit',
                   style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface)),
             ],

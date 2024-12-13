@@ -28,9 +28,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   bool _isSearching = false;
   List<dynamic> _filteredNotes = [];
   List<dynamic> _filteredLists = [];
-  final AppService _appService = AppService();
-  List<dynamic> _notes = [];
-  List<dynamic> _lists = [];
+  late Future<List<dynamic>> _notesFuture;
+  late Future<List<dynamic>> _listsFuture;
   late TabController _tabController;
   bool isLoading = true;
   bool isChecked = false;
@@ -39,12 +38,13 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final RefreshController _refreshController =
       RefreshController(initialRefresh: true);
   late AnimationController _refreshAnimationController;
+  final AppService _appService = AppService();
 
   @override
   void initState() {
     super.initState();
-    fetchNotes();
-    fetchLists();
+    _notesFuture = _fetchNotes();
+    _listsFuture = _fetchLists();
     _tabController = TabController(length: 2, vsync: this);
     _refreshAnimationController = AnimationController(
       duration: const Duration(seconds: 1),
@@ -78,7 +78,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 hintStyle: TextStyle(color: Colors.white70),
                 border: InputBorder.none,
               ),
-              onChanged: _filterItems,
+              onChanged: (query) {
+                setState(() {
+                  
+                });
+              },
             )
           : const Text('Notebook'),
       actions: [
@@ -89,8 +93,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               _isSearching = !_isSearching;
               if (!_isSearching) {
                 _searchController.clear();
-                _filteredNotes = _notes;
-                _filteredLists = _lists;
+                _filteredNotes = [];
+                _filteredLists = [];
               }
             });
           },
@@ -213,7 +217,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               onTap: () async {
                 final result = await _showAddNoteDialog(context);
-                if (result == true) fetchNotes();
+                if (result == true) {
+                  setState(() {
+                    _notesFuture = _fetchNotes();
+                  });
+                }
               },
             ),
             SpeedDialChild(
@@ -227,7 +235,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                     onTap: () async {
                  final result = await _showAddListDialog(context);
-                if (result == true) fetchLists();
+                if (result == true) {
+                  setState(() {
+                    _listsFuture = _fetchLists();
+                  });
+                }
             },
             ),
           ],
@@ -241,38 +253,74 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
           child: TabBarView(
             controller: _tabController,
             children: [
-              NotesTab(
-                crossCount: noteCross,
-                notes: _isSearching ? _filteredNotes : _notes,
-                onDelete: deleteNote,
-                onEdit: (id) async {
-                    final note =
-                        _notes.firstWhere((n) => n['id'].toString() == id);
-                    final result = await _showEditNoteDialog(context, note);
-                    if (result == true) fetchNotes();
-                  },
+              FutureBuilder<List<dynamic>>(
+                future: _notesFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text('Henüz not yok.'));
+                  } else {
+                    final notes = snapshot.data!;
+                    return NotesTab(
+                      crossCount: noteCross,
+                      notes: _isSearching ? _filterNotes(notes) : notes,
+                      onDelete: (id) => _deleteNote(id),
+                      onEdit: (id) async {
+                        final note =
+                            notes.firstWhere((n) => n['id'].toString() == id);
+                        final result = await _showEditNoteDialog(context, note);
+                        if (result == true) {
+                          setState(() {
+                            _notesFuture = _fetchNotes();
+                          });
+                        }
+                      },
                       onColorChanged: (String id, Color color) {
-                  showColorPicker(id, color);
+                        showColorPicker(id, color);
+                      },
+                    );
+                  }
                 },
               ),
-              ListsTab(
-                lists: _isSearching ? _filteredLists : _lists,
-                onDelete: deleteList,
-                 isChecked: isChecked,
-                  onEdit: (id) async {
-                    final list =
-                        _lists.firstWhere((n) => n['id'].toString() == id);
-                    final result = await _showEditListDialog(context, list);
-                  if (result == true) fetchLists();
-                  },
-                crossCount: listCross,
-                 onChanged: (String id, bool value) {
-                  setState(() {
-                    updateCheckbox(id, value);
-                  });
-                },
-              onColorChanged: (String id, Color color) {
-                  showColorPicker(id, color);
+              FutureBuilder<List<dynamic>>(
+                future: _listsFuture,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text('Henüz liste yok.'));
+                  } else {
+                    final lists = snapshot.data!;
+                    return ListsTab(
+                      lists: _isSearching ? _filterLists(lists) : lists,
+                      onDelete: (id) => _deleteList(id),
+                      isChecked: isChecked,
+                      onEdit: (id) async {
+                        final list =
+                            lists.firstWhere((n) => n['id'].toString() == id);
+                        final result = await _showEditListDialog(context, list);
+                        if (result == true) {
+                          setState(() {
+                            _listsFuture = _fetchLists();
+                          });
+                        }
+                      },
+                      crossCount: listCross,
+                      onChanged: (String id, bool value) {
+                        setState(() {
+                          _updateCheckbox(id, value);
+                        });
+                      },
+                      onColorChanged: (String id, Color color) {
+                        showColorPicker(id, color);
+                      },
+                    );
+                  }
                 },
               ),
             ],
@@ -283,20 +331,17 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
 
 
 
-  Future<void> fetchNotes() async {
+  Future<List<dynamic>> _fetchNotes() async {
     try {
       final notes = await _appService.fetchNotes();
-      setState(() {
-        _notes = notes..sort((a, b) => b['date'].compareTo(a['date']));
-        _filteredNotes = _notes;
-        isLoading = false;
-      });
+      return notes..sort((a, b) => b['date'].compareTo(a['date']));
     } catch (e) {
       _showError(e.toString());
+      return [];
     }
   }
 
-  Future<void> fetchLists() async {
+  Future<List<dynamic>> _fetchLists() async {
     try {
       final lists = await _appService.fetchLists();
 
@@ -318,18 +363,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       }
       await initializeDateFormatting('tr_TR', null);
       final DateFormat formatter = DateFormat('d MMMM y HH:mm', 'tr_TR');
-      setState(() {
-        _lists = lists
-          ..sort((a, b) {
-            DateTime dateA = formatter.parse(a['date']);
-           DateTime dateB = formatter.parse(b['date']);
-             return dateB.compareTo(dateA);
-         });
-        _filteredLists = _lists;
-        isLoading = false;
-      });
+      return lists
+        ..sort((a, b) {
+          DateTime dateA = formatter.parse(a['date']);
+          DateTime dateB = formatter.parse(b['date']);
+          return dateB.compareTo(dateA);
+        });
     } catch (e) {
       _showError(e.toString());
+      return [];
     }
   }
 
@@ -339,22 +381,23 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Future<void> updateCheckbox(String id, bool value) async {
+  Future<void> _updateCheckbox(String id, bool value) async {
     try {
       await _appService.updateCheckbox(id, value);
-       setState(() {
-          fetchLists();
-          isLoading = false;
+      setState(() {
+          _listsFuture = _fetchLists();
          });
     } catch (e) {
       _showError(e.toString());
     }
   }
 
-  Future<void> deleteNote(String id) async {
+  Future<void> _deleteNote(String id) async {
     try {
        await _appService.deleteNote(id);
-          fetchNotes();
+          setState(() {
+            _notesFuture = _fetchNotes();
+          });
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Not başarıyla silindi.'),
@@ -366,10 +409,12 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  Future<void> deleteList(String id) async {
+  Future<void> _deleteList(String id) async {
     try {
       await _appService.deleteList(id);
-      fetchLists();
+      setState(() {
+        _listsFuture = _fetchLists();
+      });
        ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
            content: Text('Liste başarıyla silindi.'),
@@ -400,44 +445,51 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     }
   }
 
-  void _filterItems(String query) {
-    setState(() {
-      if (query.isEmpty) {
-        _filteredNotes = _notes;
-         _filteredLists = _lists;
-      } else {
-        _filteredNotes = _notes
-            .where((note) =>
-                note['title']
-                        ?.toString()
-                        .toLowerCase()
-                        .contains(query.toLowerCase()) ==
-                    true ||
-                 note['note']
-                        ?.toString()
-                       .toLowerCase()
-                       .contains(query.toLowerCase()) ==
-                   true)
-             .toList();
-          _filteredLists = _lists
-              .where((list) =>
-                  list['list']
-                    ?.toString()
-                    .toLowerCase()
-                  .contains(query.toLowerCase()) ==
-                   true)
-              .toList();
+  List<dynamic> _filterNotes(List<dynamic> notes) {
+    final query = _searchController.text.toLowerCase();
+    if (query.isEmpty) {
+      return notes;
+    } else {
+      return notes
+          .where((note) =>
+              note['title']
+                      ?.toString()
+                      .toLowerCase()
+                      .contains(query) ==
+                  true ||
+               note['note']
+                      ?.toString()
+                     .toLowerCase()
+                     .contains(query) ==
+                 true)
+           .toList();
+    }
+  }
 
-      }
-    });
+  List<dynamic> _filterLists(List<dynamic> lists) {
+    final query = _searchController.text.toLowerCase();
+    if (query.isEmpty) {
+      return lists;
+    } else {
+      return lists
+          .where((list) =>
+              list['list']
+                ?.toString()
+                .toLowerCase()
+              .contains(query) ==
+               true)
+          .toList();
+    }
   }
 
 
   void _onRefresh() async {
     _refreshAnimationController.repeat();
     try {
-      await fetchNotes();
-    await fetchLists();
+      setState(() {
+        _notesFuture = _fetchNotes();
+        _listsFuture = _fetchLists();
+      });
       await Future.delayed(const Duration(seconds: 1), () {
           _refreshAnimationController.stop();
         _refreshController.refreshCompleted();
@@ -501,8 +553,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                        ScaffoldMessenger.of(context).showSnackBar(
                            const SnackBar(content: Text('Renk başarıyla güncellendi')),
                        );
-                        fetchLists();// Refresh lists to show updated color
-                       fetchNotes();
+                        setState(() {
+                          _listsFuture = _fetchLists();
+                          _notesFuture = _fetchNotes();
+                        });
                         
                         } else {
                       ScaffoldMessenger.of(context).showSnackBar(

@@ -4,8 +4,8 @@ import 'package:flutter_noteapp/provider/error_utils.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter_noteapp/provider/theme_provider.dart';
+import 'package:provider/provider.dart';
 
 class AddNoteScreen extends StatefulWidget {
   final bool isDialog;
