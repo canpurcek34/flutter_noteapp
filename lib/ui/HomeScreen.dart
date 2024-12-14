@@ -26,7 +26,9 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
+  // ignore: unused_field
   List<dynamic> _filteredNotes = [];
+  // ignore: unused_field
   List<dynamic> _filteredLists = [];
   late Future<List<dynamic>> _notesFuture;
   late Future<List<dynamic>> _listsFuture;

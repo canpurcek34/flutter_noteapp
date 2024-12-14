@@ -205,7 +205,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Giriş Butonu
                   _isLoading 
-                    ? Center(
+                    ? const Center(
                         child: SpinKitChasingDots(
                           color: Colors.cyan,
                           size: 50.0,

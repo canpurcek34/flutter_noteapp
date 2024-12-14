@@ -195,7 +195,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     Navigator.push(
       context,
       PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => SignUpScreen(),
+        pageBuilder: (context, animation, secondaryAnimation) => const SignUpScreen(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return SlideTransition(
             position: Tween<Offset>(
