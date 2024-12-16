@@ -1,25 +1,38 @@
+// ui/EditNoteScreen.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_noteapp/provider/error_utils.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:intl/intl.dart';
 import 'package:flutter_noteapp/provider/theme_provider.dart';
+import 'package:flutter_noteapp/viewmodels/edit_note_viewmodel.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-class EditNoteScreen extends StatefulWidget {
+class EditNoteScreen extends StatelessWidget {
   final Map<String, dynamic> note;
   final bool isDialog;
 
   const EditNoteScreen({super.key, required this.note, this.isDialog = false});
 
   @override
-  _EditNoteScreenState createState() => _EditNoteScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => EditNoteViewModel(),
+      child: _EditNoteScreenContent(note: note, isDialog: isDialog),
+    );
+  }
 }
 
-class _EditNoteScreenState extends State<EditNoteScreen> {
+class _EditNoteScreenContent extends StatefulWidget {
+  final Map<String, dynamic> note;
+  final bool isDialog;
+  const _EditNoteScreenContent(
+      {super.key, required this.note, this.isDialog = false});
+
+  @override
+  _EditNoteScreenContentState createState() => _EditNoteScreenContentState();
+}
+
+class _EditNoteScreenContentState extends State<_EditNoteScreenContent> {
   late final TextEditingController _titleController;
   late final TextEditingController _noteController;
-  bool _isLoading = false;
   final _formKey = GlobalKey<FormState>();
 
   @override
@@ -36,57 +49,9 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
     super.dispose();
   }
 
-  Future<void> _updateNote() async {
-    if (_isLoading) return;
-
-    setState(() => _isLoading = true);
-    try {
-      final now = DateTime.now();
-      final formattedDate = DateFormat('d MMMM y HH:mm', 'tr_TR').format(now);
-      final response = await http.post(
-        Uri.parse(
-            'https://emrecanpurcek.com.tr/projects/methods/note/update.php'),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode({
-          'id': widget.note['id'].toString(),
-          'title': _titleController.text,
-          'note': _noteController.text,
-          'date': formattedDate,
-        }),
-      );
-      final data = json.decode(response.body);
-      if (data['success'] == 1) {
-        if (mounted) {
-          Navigator.pop(context, true);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Not güncellendi.'),
-              backgroundColor: Colors.green.shade600,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      } else {
-        if (mounted) {
-          ErrorUtils.showErrorSnackBar(context, 'Hata: ${data['message']}');
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ErrorUtils.showErrorSnackBar(context, 'Bir hata oluştu: $e');
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final viewModel = Provider.of<EditNoteViewModel>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.currentTheme.brightness == Brightness.dark;
     final surfaceColor =
@@ -152,30 +117,36 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
                           value?.isEmpty ?? true ? 'Not giriniz' : null,
                     ),
                     const SizedBox(height: 24),
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : _updateNote,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: buttonColor,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                    viewModel.isLoading
+                        ? const Center(
+                            child: SpinKitChasingDots(
+                              color: Colors.cyan,
+                              size: 50.0,
+                            ),
+                          )
+                        : ElevatedButton(
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                viewModel.updateNote(
+                                  context,
+                                  widget.note['id'].toString(),
+                                  _titleController.text,
+                                  _noteController.text,
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: buttonColor,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            )
-                          : Text(
+                            ),
+                            child: Text(
                               'Kaydet',
                               style: TextStyle(fontSize: 16, color: textColor),
                             ),
-                    ),
+                          ),
                   ],
                 ),
               ),
@@ -237,31 +208,38 @@ class _EditNoteScreenState extends State<EditNoteScreen> {
                             value?.isEmpty ?? true ? 'Not giriniz' : null,
                       ),
                       const SizedBox(height: 24),
-                      ElevatedButton(
-                        onPressed: _isLoading ? null : _updateNote,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: buttonColor,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: _isLoading
-                            ? const SizedBox(
-                                height: 20,
-                                width: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white),
+                      viewModel.isLoading
+                          ? const Center(
+                              child: SpinKitChasingDots(
+                                color: Colors.cyan,
+                                size: 50.0,
+                              ),
+                            )
+                          : ElevatedButton(
+                              onPressed: () {
+                                if (_formKey.currentState!.validate()) {
+                                  viewModel.updateNote(
+                                    context,
+                                    widget.note['id'].toString(),
+                                    _titleController.text,
+                                    _noteController.text,
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: buttonColor,
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 16),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
-                              )
-                            : Text(
+                              ),
+                              child: Text(
                                 'Kaydet',
                                 style:
                                     TextStyle(fontSize: 16, color: textColor),
                               ),
-                      ),
+                            ),
                     ],
                   ),
                 ),

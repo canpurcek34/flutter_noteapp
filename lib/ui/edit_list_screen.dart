@@ -1,24 +1,40 @@
+// ui/EditListScreen.dart
 import 'package:flutter/material.dart';
-import 'package:flutter_noteapp/provider/error_utils.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
-import 'package:intl/intl.dart';
 import 'package:flutter_noteapp/provider/theme_provider.dart';
+import 'package:flutter_noteapp/viewmodels/edit_list_viewmodel.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-class EditListScreen extends StatefulWidget {
+class EditListScreen extends StatelessWidget {
   final Map<String, dynamic> list;
   final bool isDialog;
 
   const EditListScreen({super.key, required this.list, this.isDialog = false});
+
   @override
-  _EditListScreenState createState() => _EditListScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => EditListViewModel(),
+      child: _EditListScreenContent(list: list, isDialog: isDialog),
+    );
+  }
 }
 
-class _EditListScreenState extends State<EditListScreen> {
+class _EditListScreenContent extends StatefulWidget {
+  final Map<String, dynamic> list;
+  final bool isDialog;
+  const _EditListScreenContent(
+      {super.key, required this.list, this.isDialog = false});
+
+  @override
+  _EditListScreenContentState createState() => _EditListScreenContentState();
+}
+
+class _EditListScreenContentState extends State<_EditListScreenContent> {
   late final TextEditingController _listController;
   late final String _originalDate;
-  bool _isLoading = false;
+  final _formKey = GlobalKey<FormState>();
+
   @override
   void initState() {
     super.initState();
@@ -32,60 +48,9 @@ class _EditListScreenState extends State<EditListScreen> {
     super.dispose();
   }
 
-  Future<void> _updateList() async {
-    if (_isLoading) return;
-    setState(() {
-      _isLoading = true;
-    });
-    try {
-      final now = DateTime.now();
-      final formattedDate = DateFormat('d MMMM y HH:mm', 'tr_TR').format(now);
-      final response = await http.post(
-        Uri.parse(
-            'https://emrecanpurcek.com.tr/projects/methods/list/update.php'),
-        headers: {
-          'Content-Type': 'application/json; charset=UTF-8',
-        },
-        body: jsonEncode({
-          'id': widget.list['id'].toString(),
-          'list': _listController.text,
-          'date': formattedDate
-        }),
-      );
-      final data = json.decode(response.body);
-
-      if (data['success'] == 1) {
-        if (mounted) {
-          Navigator.pop(context, true);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text('Not güncellendi.'),
-              backgroundColor: Colors.green.shade600,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 2),
-            ),
-          );
-        }
-      } else {
-        if (mounted) {
-          ErrorUtils.showErrorSnackBar(context, 'Hata: ${data['message']}');
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ErrorUtils.showErrorSnackBar(context, 'Bir hata oluştu: $e');
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final viewModel = Provider.of<EditListViewModel>(context);
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.currentTheme.brightness == Brightness.dark;
     final surfaceColor =
@@ -95,7 +60,6 @@ class _EditListScreenState extends State<EditListScreen> {
     final textColor = isDarkMode ? Colors.white : Colors.black;
     final hintTextColor =
         isDarkMode ? Colors.white.withOpacity(0.5) : Colors.black54;
-
     return widget.isDialog
         ? Dialog(
             child: SingleChildScrollView(
@@ -141,28 +105,35 @@ class _EditListScreenState extends State<EditListScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : _updateList,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: buttonColor,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                    viewModel.isLoading
+                        ? const Center(
+                            child: SpinKitChasingDots(
+                              color: Colors.cyan,
+                              size: 50.0,
+                            ),
+                          )
+                        : ElevatedButton(
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                viewModel.updateList(
+                                  context,
+                                  widget.list['id'].toString(),
+                                  _listController.text,
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: buttonColor,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            )
-                          : Text(
+                            ),
+                            child: Text(
                               'Kaydet',
                               style: TextStyle(fontSize: 16, color: textColor),
                             ),
-                    ),
+                          ),
                   ],
                 ),
               ),
@@ -220,28 +191,35 @@ class _EditListScreenState extends State<EditListScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : _updateList,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: buttonColor,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: _isLoading
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
+                    viewModel.isLoading
+                        ? const Center(
+                            child: SpinKitChasingDots(
+                              color: Colors.cyan,
+                              size: 50.0,
+                            ),
+                          )
+                        : ElevatedButton(
+                            onPressed: () {
+                              if (_formKey.currentState!.validate()) {
+                                viewModel.updateList(
+                                  context,
+                                  widget.list['id'].toString(),
+                                  _listController.text,
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: buttonColor,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                            )
-                          : Text(
+                            ),
+                            child: Text(
                               'Kaydet',
                               style: TextStyle(fontSize: 16, color: textColor),
                             ),
-                    ),
+                          ),
                   ],
                 ),
               ),

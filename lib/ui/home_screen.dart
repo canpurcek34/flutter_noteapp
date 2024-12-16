@@ -1,57 +1,61 @@
+//ui/HomeScreen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:flutter_noteapp/authpages/AuthScreen.dart';
+import 'package:flutter_noteapp/authpages/auth_screen.dart';
 import 'package:flutter_noteapp/provider/theme_provider.dart';
+import 'package:flutter_noteapp/service/AppService.dart';
+import 'package:flutter_noteapp/ui/add_list_screen.dart';
+import 'package:flutter_noteapp/ui/add_note_screen.dart';
+import 'package:flutter_noteapp/ui/edit_list_screen.dart';
+import 'package:flutter_noteapp/ui/edit_note_screen.dart';
+import 'package:flutter_noteapp/widgets/lists_tab.dart';
+import 'package:flutter_noteapp/widgets/notes_tab.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
-import 'package:intl/date_symbol_data_local.dart';
-import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
-import '../service/AppService.dart';
-import '../widgets/ListsTab.dart';
-import '../widgets/NotesTab.dart';
-import 'AddListScreen.dart';
-import 'AddNoteScreen.dart';
-import 'EditListScreen.dart';
-import 'EditNoteScreen.dart';
+import '../viewmodels/home_viewmodel.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-class HomeScreen extends StatefulWidget {
+class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => HomeViewModel(),
+      child: _HomeScreenContent(),
+    );
+  }
 }
 
-class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
+class _HomeScreenContent extends StatefulWidget {
+  @override
+  _HomeScreenContentState createState() => _HomeScreenContentState();
+}
+
+class _HomeScreenContentState extends State<_HomeScreenContent>
+    with TickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   bool _isSearching = false;
-  // ignore: unused_field
-  List<dynamic> _filteredNotes = [];
-  // ignore: unused_field
-  List<dynamic> _filteredLists = [];
-  late Future<List<dynamic>> _notesFuture;
-  late Future<List<dynamic>> _listsFuture;
   late TabController _tabController;
-  bool isLoading = true;
   bool isChecked = false;
-  String selectedMode = "Açık Mod";
-  String? formattedDate;
+  late AnimationController _refreshAnimationController;
   final RefreshController _refreshController =
       RefreshController(initialRefresh: true);
-  late AnimationController _refreshAnimationController;
-  final AppService _appService = AppService();
 
   @override
   void initState() {
     super.initState();
-    _notesFuture = _fetchNotes();
-    _listsFuture = _fetchLists();
     _tabController = TabController(length: 2, vsync: this);
     _refreshAnimationController = AnimationController(
       duration: const Duration(seconds: 1),
       vsync: this,
     );
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          final viewModel = Provider.of<HomeViewModel>(context, listen: false);
+           viewModel.fetchNotes();
+           viewModel.fetchLists();
+    });
   }
 
   @override
@@ -62,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.dispose();
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
     return AppBar(
       elevation: 4,
       leading: Builder(
@@ -81,9 +85,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 border: InputBorder.none,
               ),
               onChanged: (query) {
-                setState(() {
-                  
-                });
+                setState(() {});
               },
             )
           : const Text('Notebook'),
@@ -95,8 +97,6 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               _isSearching = !_isSearching;
               if (!_isSearching) {
                 _searchController.clear();
-                _filteredNotes = [];
-                _filteredLists = [];
               }
             });
           },
@@ -116,8 +116,8 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildDrawer() {
-      final themeProvider = Provider.of<ThemeProvider>(context);
+  Widget _buildDrawer(BuildContext context) {
+    final themeProvider = Provider.of<ThemeProvider>(context);
     return Drawer(
       child: ListView(
         padding: EdgeInsets.zero,
@@ -172,20 +172,20 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
             },
           ),
           const Divider(),
-                 ListTile(
-            leading: Icon( themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
-            title: Text( themeProvider.isDarkMode ? 'Açık Mod' : 'Koyu Mod'),
+          ListTile(
+            leading: Icon(themeProvider.isDarkMode ? Icons.light_mode : Icons.dark_mode),
+            title: Text(themeProvider.isDarkMode ? 'Açık Mod' : 'Koyu Mod'),
             onTap: () {
-                    themeProvider.toggleTheme();
+              themeProvider.toggleTheme();
               Navigator.pop(context);
             },
           ),
           const Divider(),
           ListTile(
-                 leading: const Icon(Icons.logout),
+            leading: const Icon(Icons.logout),
             title: const Text('Çıkış Yap'),
             onTap: () {
-              _logout();
+              _logout(context);
             },
           ),
         ],
@@ -198,9 +198,11 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     final screenWidth = MediaQuery.of(context).size.width;
     int noteCross = screenWidth < 600 ? 2 : 4;
     int listCross = screenWidth < 600 ? 1 : 4;
+    final viewModel = Provider.of<HomeViewModel>(context);
+
     return Scaffold(
-        appBar: _buildAppBar(),
-        drawer: _buildDrawer(),
+      appBar: _buildAppBar(context),
+      drawer: _buildDrawer(context),
         floatingActionButton: SpeedDial(
           animatedIcon: AnimatedIcons.menu_close,
           backgroundColor: Colors.cyan,
@@ -219,11 +221,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               ),
               onTap: () async {
                 final result = await _showAddNoteDialog(context);
-                if (result == true) {
-                  setState(() {
-                    _notesFuture = _fetchNotes();
-                  });
-                }
+               
               },
             ),
             SpeedDialChild(
@@ -237,216 +235,150 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   ),
                     onTap: () async {
                  final result = await _showAddListDialog(context);
-                if (result == true) {
-                  setState(() {
-                    _listsFuture = _fetchLists();
-                  });
-                }
             },
             ),
           ],
         ),
-        body: SmartRefresher(
-          enablePullDown: true,
-          enablePullUp: true,
-          header: const WaterDropHeader(),
-          controller: _refreshController,
-          onRefresh: _onRefresh,
-          child: TabBarView(
-            controller: _tabController,
+      body: SmartRefresher(
+        enablePullDown: true,
+        enablePullUp: true,
+        header: const WaterDropHeader(),
+        controller: _refreshController,
+        onRefresh: () => _onRefresh(context),
+         child:  viewModel.isLoading
+            ? const Center(child: CircularProgressIndicator())
+            :   TabBarView(
+              controller: _tabController,
             children: [
-              FutureBuilder<List<dynamic>>(
-                future: _notesFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('Henüz not yok.'));
-                  } else {
-                    final notes = snapshot.data!;
-                    return NotesTab(
-                      crossCount: noteCross,
-                      notes: _isSearching ? _filterNotes(notes) : notes,
-                      onDelete: (id) => _deleteNote(id),
-                      onEdit: (id) async {
-                        final note =
-                            notes.firstWhere((n) => n['id'].toString() == id);
-                        final result = await _showEditNoteDialog(context, note);
-                        if (result == true) {
-                          setState(() {
-                            _notesFuture = _fetchNotes();
-                          });
-                        }
-                      },
-                      onColorChanged: (String id, Color color) {
-                        showColorPicker(id, color);
-                      },
-                    );
-                  }
-                },
-              ),
-              FutureBuilder<List<dynamic>>(
-                future: _listsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (snapshot.hasError) {
-                    return Center(child: Text('Error: ${snapshot.error}'));
-                  } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('Henüz liste yok.'));
-                  } else {
-                    final lists = snapshot.data!;
-                    return ListsTab(
-                      lists: _isSearching ? _filterLists(lists) : lists,
-                      onDelete: (id) => _deleteList(id),
+                  NotesTab(
+                    crossCount: noteCross,
+                 notes: _isSearching ? _filterNotes(viewModel.notes) : viewModel.notes,
+                    onDelete: (id) => _deleteNote(context,id),
+                 onEdit: (id)  {
+                     final note =
+                          viewModel.notes.firstWhere((n) => n['id'].toString() == id);
+                     _showEditNoteDialog(context, note);
+                   },
+                    onColorChanged: (String id, Color color) {
+                      showColorPicker(context,id, color);
+                    },
+                  ),
+               ListsTab(
+                   crossCount: listCross,
+                    lists:  _isSearching ? _filterLists(viewModel.lists) : viewModel.lists,
+                 onDelete: (id) => _deleteList(context,id),
+                    onEdit: (id)  {
+                      final list =
+                            viewModel.lists.firstWhere((n) => n['id'].toString() == id);
+                         _showEditListDialog(context, list);
+                    },
+                    onChanged: (String id, bool value) {
+                           _updateCheckbox(context, id, value);
+                    },
                       isChecked: isChecked,
-                      onEdit: (id) async {
-                        final list =
-                            lists.firstWhere((n) => n['id'].toString() == id);
-                        final result = await _showEditListDialog(context, list);
-                        if (result == true) {
-                          setState(() {
-                            _listsFuture = _fetchLists();
-                          });
-                        }
-                      },
-                      crossCount: listCross,
-                      onChanged: (String id, bool value) {
-                        setState(() {
-                          _updateCheckbox(id, value);
-                        });
-                      },
-                      onColorChanged: (String id, Color color) {
-                        showColorPicker(id, color);
-                      },
-                    );
-                  }
-                },
+                 onColorChanged: (String id, Color color) {
+                   showColorPicker(context,id, color);
+                 },
+                  ),
+                ],
               ),
-            ],
-          ),
         ),
-      );
-  }
-
-
-
-  Future<List<dynamic>> _fetchNotes() async {
-    try {
-      final notes = await _appService.fetchNotes();
-      return notes..sort((a, b) => b['date'].compareTo(a['date']));
-    } catch (e) {
-      _showError(e.toString());
-      return [];
-    }
-  }
-
-  Future<List<dynamic>> _fetchLists() async {
-    try {
-      final lists = await _appService.fetchLists();
-
-      Map<String, Color> colorNames = {
-        "red": Colors.red,
-        "blue": Colors.blue,
-        "green": Colors.green,
-        "yellow": Colors.yellow,
-        "orange": Colors.orange,
-        "grey": Colors.grey,
-        "purple": Colors.purple,
-        "cyan": Colors.cyan,
-        "white": Colors.white
-      };
-
-      for (var _colors in lists) {
-        String colorName = _colors['color'] ?? 'white';
-        _colors['flutterColor'] = colorNames[colorName] ?? Colors.white;
-      }
-      await initializeDateFormatting('tr_TR', null);
-      final DateFormat formatter = DateFormat('d MMMM y HH:mm', 'tr_TR');
-      return lists
-        ..sort((a, b) {
-          DateTime dateA = formatter.parse(a['date']);
-          DateTime dateB = formatter.parse(b['date']);
-          return dateB.compareTo(dateA);
-        });
-    } catch (e) {
-      _showError(e.toString());
-      return [];
-    }
-  }
-
-  void _showError(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message), behavior: SnackBarBehavior.floating),
     );
   }
-
-  Future<void> _updateCheckbox(String id, bool value) async {
-    try {
-      await _appService.updateCheckbox(id, value);
-      setState(() {
-          _listsFuture = _fetchLists();
-         });
+  Widget _buildRefreshButton() {
+    return RotationTransition(
+          turns: _refreshAnimationController,
+        child: IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: () {
+              _onRefresh(context);
+            }
+          ),
+    );
+  }
+  Future<void> _onRefresh(BuildContext context) async {
+    _refreshAnimationController.repeat();
+     final viewModel = Provider.of<HomeViewModel>(context, listen: false);
+     try {
+          await  viewModel.fetchNotes();
+          await viewModel.fetchLists();
+        await Future.delayed(const Duration(seconds: 1), () {
+          _refreshAnimationController.stop();
+         _refreshController.refreshCompleted();
+       });
     } catch (e) {
-      _showError(e.toString());
+        _refreshAnimationController.stop();
+         _refreshController.refreshFailed();
+       ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text('Hata: $e'),  behavior: SnackBarBehavior.floating)
+         );
+    }
+    }
+
+
+    Future<void> _updateCheckbox(BuildContext context,String id, bool value) async {
+      final viewModel = Provider.of<HomeViewModel>(context, listen: false);
+    try {
+       await viewModel.updateCheckbox(id,value);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text('Hata: $e'),  behavior: SnackBarBehavior.floating)
+         );
     }
   }
 
-  Future<void> _deleteNote(String id) async {
+  Future<void> _deleteNote(BuildContext context, String id) async {
+     final viewModel = Provider.of<HomeViewModel>(context, listen: false);
     try {
-       await _appService.deleteNote(id);
-          setState(() {
-            _notesFuture = _fetchNotes();
-          });
-      ScaffoldMessenger.of(context).showSnackBar(
+      await viewModel.deleteNote(id);
+       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Not başarıyla silindi.'),
            behavior: SnackBarBehavior.floating,
         ),
       );
-   } catch (e) {
-      _showError(e.toString());
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text('Hata: $e'),  behavior: SnackBarBehavior.floating)
+         );
     }
   }
 
-  Future<void> _deleteList(String id) async {
+  Future<void> _deleteList(BuildContext context, String id) async {
+    final viewModel = Provider.of<HomeViewModel>(context, listen: false);
     try {
-      await _appService.deleteList(id);
-      setState(() {
-        _listsFuture = _fetchLists();
-      });
-       ScaffoldMessenger.of(context).showSnackBar(
+      await viewModel.deleteList(id);
+        ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
            content: Text('Liste başarıyla silindi.'),
          behavior: SnackBarBehavior.floating,
          ),
        );
-   } catch (e) {
-    _showError(e.toString());
+    } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text('Hata: $e'),  behavior: SnackBarBehavior.floating)
+         );
     }
   }
 
-  Future<void> _logout() async {
+  Future<void> _logout(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut();
-       Navigator.push(
+      Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (context) => const AuthScreen(),
         ),
       );
     } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Çıkış yapılırken bir hata oluştu: ${e.toString()}'),
-            behavior: SnackBarBehavior.floating,
+          behavior: SnackBarBehavior.floating,
         ),
       );
     }
   }
-
   List<dynamic> _filterNotes(List<dynamic> notes) {
     final query = _searchController.text.toLowerCase();
     if (query.isEmpty) {
@@ -485,35 +417,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
   }
 
 
-  void _onRefresh() async {
-    _refreshAnimationController.repeat();
-    try {
-      setState(() {
-        _notesFuture = _fetchNotes();
-        _listsFuture = _fetchLists();
-      });
-      await Future.delayed(const Duration(seconds: 1), () {
-          _refreshAnimationController.stop();
-        _refreshController.refreshCompleted();
-       });
-    } catch (e) {
-     _refreshAnimationController.stop();
-      _refreshController.refreshFailed();
-       _showError(e.toString());
-    }
-  }
-
-   Widget _buildRefreshButton() {
-    return RotationTransition(
-          turns: _refreshAnimationController,
-        child: IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _onRefresh,
-          ),
-    );
-  }
-
-  void showColorPicker(String id, Color currentColor) {
+  void showColorPicker(BuildContext context, String id, Color currentColor) {
     showDialog(
         context: context,
       builder: (BuildContext context) {
@@ -549,17 +453,16 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
              TextButton(
                 child: const Text('Tamam'),
                 onPressed: () async {
-               bool success =
+                  bool success =
                             await ColorService.updateColor(id, selectedColor);
                       if (success) {
                        ScaffoldMessenger.of(context).showSnackBar(
                            const SnackBar(content: Text('Renk başarıyla güncellendi')),
                        );
-                        setState(() {
-                          _listsFuture = _fetchLists();
-                          _notesFuture = _fetchNotes();
-                        });
-                        
+
+                          final viewModel = Provider.of<HomeViewModel>(context, listen: false);
+                        await viewModel.fetchLists();
+                        await viewModel.fetchNotes();
                         } else {
                       ScaffoldMessenger.of(context).showSnackBar(
                          const SnackBar(content: Text('Renk güncellenemedi')),
@@ -573,65 +476,133 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
       },
     );
   }
+    Future<dynamic> _showAddNoteDialog(BuildContext context) async {
+        final viewModel = Provider.of<HomeViewModel>(context, listen: false);
 
-
-   Future<dynamic> _showAddNoteDialog(BuildContext context) async {
-    if (MediaQuery.of(context).size.width >= 600) {
+      if (MediaQuery.of(context).size.width >= 600) {
       return await showDialog(
            context: context,
             barrierDismissible: true,
         builder: (BuildContext context) {
-             return const AddNoteScreen(isDialog: true,);
-        });
+             return ChangeNotifierProvider(
+             create: (_) => HomeViewModel(),
+              child: const AddNoteScreen(isDialog: true,));
+        }).then((value) => {
+             if(value == true)
+              {
+                viewModel.fetchNotes(),
+                viewModel.fetchLists()
+              }
+          });
     } else {
     return await Navigator.push(
              context,
-             MaterialPageRoute(builder: (context) => const AddNoteScreen()),
-        );
+             MaterialPageRoute(builder: (context) => ChangeNotifierProvider(
+               create: (_) => HomeViewModel(),
+              child: const AddNoteScreen())),
+        ).then((value) => {
+           if(value == true)
+              {
+                viewModel.fetchNotes(),
+                  viewModel.fetchLists()
+              }
+          });
    }
-}
+  }
   Future<dynamic> _showEditNoteDialog(BuildContext context, Map<String,dynamic> note) async {
-    if (MediaQuery.of(context).size.width >= 600) {
-      return await showDialog(
-         context: context,
-         barrierDismissible: true,
-        builder: (BuildContext context) {
-         return  EditNoteScreen(note: note, isDialog: true,);
+        final viewModel = Provider.of<HomeViewModel>(context, listen: false);
+
+     if (MediaQuery.of(context).size.width >= 600) {
+        return await showDialog(
+            context: context,
+            builder: (context) => ChangeNotifierProvider(
+            create: (_) => HomeViewModel(),
+             child:  EditNoteScreen(note: note, isDialog: true,),
+          )
+        ).then((value) => {
+           if(value == true)
+            {
+               viewModel.fetchNotes(),
+                viewModel.fetchLists()
+            }
         });
    } else {
         return  await Navigator.push(
             context,
-          MaterialPageRoute(builder: (context) => EditNoteScreen(note: note,)),
-         );
+          MaterialPageRoute(builder: (context) => ChangeNotifierProvider(
+            create: (_) => HomeViewModel(),
+             child: EditNoteScreen(note: note,)),
+         )
+         ).then((value) => {
+           if(value == true)
+            {
+                viewModel.fetchNotes(),
+                viewModel.fetchLists()
+            }
+        });
     }
   }
-  Future<dynamic> _showAddListDialog(BuildContext context) async {
+    Future<dynamic> _showAddListDialog(BuildContext context) async {
+        final viewModel = Provider.of<HomeViewModel>(context, listen: false);
+
     if (MediaQuery.of(context).size.width >= 600) {
       return await showDialog(
         context: context,
           barrierDismissible: true,
         builder: (BuildContext context) {
-            return const AddListScreen(isDialog: true);
-       });
+            return  ChangeNotifierProvider(
+                 create: (_) => HomeViewModel(),
+               child:const AddListScreen(isDialog: true,));
+       }).then((value) => {
+           if(value == true)
+              {
+                  viewModel.fetchLists(),
+                  viewModel.fetchNotes()
+              }
+          });
     } else {
        return await Navigator.push(
-            context, MaterialPageRoute(builder: (context) => const AddListScreen()),
-         );
+            context, MaterialPageRoute(builder: (context) => ChangeNotifierProvider(
+              create: (_) => HomeViewModel(),
+            child:const AddListScreen())),
+         ).then((value) => {
+            if(value == true)
+              {
+                  viewModel.fetchLists(),
+                   viewModel.fetchNotes()
+              }
+         });
     }
   }
-  Future<dynamic> _showEditListDialog(BuildContext context,Map<String,dynamic> list) async {
-    if (MediaQuery.of(context).size.width >= 600) {
-      return await showDialog(
-         context: context,
-          barrierDismissible: true,
-        builder: (BuildContext context) {
-          return EditListScreen(list: list, isDialog: true,);
+    Future<dynamic> _showEditListDialog(BuildContext context,Map<String,dynamic> list) async {
+     final viewModel = Provider.of<HomeViewModel>(context, listen: false);
+     if (MediaQuery.of(context).size.width >= 600) {
+       return await showDialog(
+        context: context,
+         builder: (context) => ChangeNotifierProvider(
+              create: (_) => HomeViewModel(),
+            child: EditListScreen(list: list, isDialog: true,),
+         ),
+       ).then((value) => {
+         if(value == true)
+              {
+                 viewModel.fetchLists(),
+                viewModel.fetchNotes()
+              }
         });
     } else {
         return await Navigator.push(
             context,
-           MaterialPageRoute(builder: (context) =>  EditListScreen(list: list,))
-           );
+           MaterialPageRoute(builder: (context) =>  ChangeNotifierProvider(
+             create: (_) => HomeViewModel(),
+            child: EditListScreen(list: list,)))
+           ).then((value) => {
+            if(value == true)
+              {
+               viewModel.fetchLists(),
+                viewModel.fetchNotes()
+             }
+          });
 
     }
   }

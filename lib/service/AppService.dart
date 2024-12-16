@@ -1,4 +1,4 @@
-
+//appservice.dart
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
@@ -108,6 +108,103 @@ class AppService {
       }
     } catch (e) {
       throw Exception(_handleError(e));
+    }
+  }
+
+    Future<void> addNote(String uuid, String title, String note, String date) async {
+      try {
+         final response = await http.post(
+        Uri.parse(
+            'https://emrecanpurcek.com.tr/projects/methods/note/insert.php'),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+        body: jsonEncode({
+          'uuid': uuid,
+          'title': title,
+          'note': note,
+          'type': 'note',
+           'color': 'white',
+          'date': date,
+        }),
+      );
+        final data = json.decode(response.body);
+         if (data['success'] != 1) {
+          throw Exception(data['message']);
+        }
+     } catch (e) {
+        throw Exception(_handleError(e));
+    }
+  }
+
+
+     Future<void> addList(String uuid, String list, String date) async {
+      try {
+           final response = await http.post(
+        Uri.parse(
+            'https://emrecanpurcek.com.tr/projects/methods/list/insert.php'),
+        headers: {'Content-Type': 'application/json; charset=UTF-8'},
+         body: jsonEncode({
+          'uuid': uuid,
+          'list': list,
+          'color': "white",
+          'isChecked': "0",
+          'type': "list",
+          'date': date,
+        }),
+      );
+           final data = json.decode(response.body);
+         if (data['success'] != 1) {
+          throw Exception(data['message']);
+        }
+    } catch (e) {
+      throw Exception(_handleError(e));
+    }
+  }
+
+
+    Future<void> updateNote(String id, String title, String note, String date) async {
+       try {
+           final response = await http.post(
+        Uri.parse(
+            'https://emrecanpurcek.com.tr/projects/methods/note/update.php'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'id': id,
+          'title': title,
+          'note': note,
+          'date': date,
+        }),
+      );
+        final data = json.decode(response.body);
+         if (data['success'] != 1) {
+           throw Exception(data['message']);
+        }
+     } catch (e) {
+          throw Exception(_handleError(e));
+    }
+  }
+
+    Future<void> updateList(String id, String list, String date) async {
+      try {
+         final response = await http.post(
+        Uri.parse(
+            'https://emrecanpurcek.com.tr/projects/methods/list/update.php'),
+        headers: {
+          'Content-Type': 'application/json; charset=UTF-8',
+        },
+        body: jsonEncode({
+          'id': id,
+          'list': list,
+          'date': date
+        }),
+      );
+          final data = json.decode(response.body);
+         if (data['success'] != 1) {
+          throw Exception(data['message']);
+        }
+    } catch (e) {
+       throw Exception(_handleError(e));
     }
   }
 

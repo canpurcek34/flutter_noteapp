@@ -1,27 +1,35 @@
-import 'package:firebase_auth/firebase_auth.dart';
+// authpages/SignScreen.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_noteapp/viewmodels/signup_viewmodel.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'LoginScreen.dart';
 
-class SignUpScreen extends StatefulWidget {
+class SignUpScreen extends StatelessWidget {
   const SignUpScreen({super.key});
 
   @override
-  _SignUpScreenState createState() => _SignUpScreenState();
+  Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => SignUpViewModel(),
+      child: _SignUpScreenContent(),
+    );
+  }
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+class _SignUpScreenContent extends StatefulWidget {
+  @override
+  _SignUpScreenContentState createState() => _SignUpScreenContentState();
+}
+
+class _SignUpScreenContentState extends State<_SignUpScreenContent> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController fullNameController = TextEditingController();
+   final _formKey = GlobalKey<FormState>();
+   bool _obscurePassword = true;
 
-  final _formKey = GlobalKey<FormState>();
-  bool _isLoading = false;
-  bool _obscurePassword = true;
-
-  @override
+    @override
   void dispose() {
     emailController.dispose();
     passwordController.dispose();
@@ -29,88 +37,10 @@ class _SignUpScreenState extends State<SignUpScreen> {
     fullNameController.dispose();
     super.dispose();
   }
-
-  Future<void> _signUp() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      UserCredential userCredential =
-          await _auth.createUserWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
-
-      // Kullanıcı profil bilgilerini güncelleme
-      await userCredential.user?.updateDisplayName(fullNameController.text.trim());
-
-      // E-mail doğrulama linkini gönder
-      await userCredential.user?.sendEmailVerification();
-
-      // Başarılı kayıt sonrası bilgilendirme
-      _showSuccessDialog();
-    } on FirebaseAuthException catch (e) {
-      String errorMessage = 'Kayıt sırasında bir hata oluştu';
-      
-      switch (e.code) {
-        case 'weak-password':
-          errorMessage = 'Şifre çok zayıf';
-          break;
-        case 'email-already-in-use':
-          errorMessage = 'Bu e-posta adresi zaten kullanımda';
-          break;
-        case 'invalid-email':
-          errorMessage = 'Geçersiz e-posta adresi';
-          break;
-      }
-
-      _showErrorSnackBar(errorMessage);
-    } catch (e) {
-      _showErrorSnackBar('Beklenmedik bir hata oluştu');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  void _showSuccessDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Kayıt Başarılı'),
-        content: const Text(
-          'Hesabınız oluşturuldu. Lütfen e-posta adresinizi doğrulayın.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => const LoginScreen()),
-              );
-            },
-            child: const Text('Giriş Ekranına Git'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
+    final viewModel = Provider.of<SignUpViewModel>(context);
+
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -132,7 +62,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                   ),
                   const SizedBox(height: 32),
-
                   // E-posta TextField
                   TextFormField(
                     controller: emailController,
@@ -156,7 +85,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-
                   // Kullanıcı Adı TextField
                   TextFormField(
                     controller: usernameController,
@@ -178,7 +106,6 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-
                   // Ad Soyad TextField
                   TextFormField(
                     controller: fullNameController,
@@ -197,14 +124,13 @@ class _SignUpScreenState extends State<SignUpScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-
                   // Şifre TextField
                   TextFormField(
                     controller: passwordController,
                     decoration: InputDecoration(
                       labelText: 'Şifre',
                       prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
+                         suffixIcon: IconButton(
                         icon: Icon(
                           _obscurePassword 
                             ? Icons.visibility_off 
@@ -220,7 +146,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    obscureText: _obscurePassword,
+                      obscureText: _obscurePassword,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Şifre boş bırakılamaz';
@@ -228,17 +154,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
                       if (value.length < 6) {
                         return 'Şifre en az 6 karakter olmalı';
                       }
-                      // Şifre karmaşıklık kontrolü
-                      if (!RegExp(r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])').hasMatch(value)) {
+                        if (!RegExp(r'^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])').hasMatch(value)) {
                         return 'Şifre büyük, küçük harf ve rakam içermelidir';
                       }
                       return null;
                     },
                   ),
                   const SizedBox(height: 24),
-
                   // Kayıt Butonu
-                  _isLoading 
+                  viewModel.isLoading
                     ? const Center(
                         child: SpinKitChasingDots(
                           color: Colors.cyan,
@@ -246,7 +170,17 @@ class _SignUpScreenState extends State<SignUpScreen> {
                         ),
                       )
                     : ElevatedButton(
-                        onPressed: _signUp,
+                        onPressed: () {
+                           if (_formKey.currentState!.validate()) {
+                            viewModel.signUp(
+                              context,
+                              emailController.text.trim(),
+                              passwordController.text.trim(),
+                              fullNameController.text.trim(),
+                               usernameController.text.trim(),
+                            );
+                           }
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.cyan,
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -262,15 +196,11 @@ class _SignUpScreenState extends State<SignUpScreen> {
                           ),
                         ),
                       ),
-
                   // Giriş Ekranına Yönlendirme
                   const SizedBox(height: 16),
                   TextButton(
                     onPressed: () {
-                      Navigator.pushReplacement(
-                        context,
-                        MaterialPageRoute(builder: (context) => const LoginScreen()),
-                      );
+                      viewModel.navigateToLogin(context);
                     },
                     child: const Text('Zaten hesabınız var mı? Giriş Yapın'),
                   ),

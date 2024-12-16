@@ -1,31 +1,32 @@
+// authpages/LoginScreen.dart
 import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_noteapp/ui/HomeScreen.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_noteapp/viewmodels/login_viewmodel.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends StatelessWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  Widget build(BuildContext context) {
+    return  ChangeNotifierProvider(
+      create: (_) => LoginViewModel(),
+      child: _LoginScreenContent(),
+    );
+  }
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+class _LoginScreenContent extends StatefulWidget {
+  @override
+  _LoginScreenContentState createState() => _LoginScreenContentState();
+}
+
+class _LoginScreenContentState extends State<_LoginScreenContent> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  
-  bool _keepLoggedIn = false;
-  bool _isLoading = false;
+  final _formKey = GlobalKey<FormState>();
   bool _obscurePassword = true;
 
-  final _formKey = GlobalKey<FormState>();
-
-  @override
-  void initState() {
-    super.initState();
-  }
 
   @override
   void dispose() {
@@ -33,75 +34,10 @@ class _LoginScreenState extends State<LoginScreen> {
     passwordController.dispose();
     super.dispose();
   }
-
-  Future<void> _login() async {
-    if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isLoading = true;
-    });
-
-    try {
-      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
-
-      User? user = userCredential.user;
-
-      if (user != null) {
-        if (_keepLoggedIn) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setBool('isLoggedIn', true);
-        }
-
-        if (!user.emailVerified) {
-          // E-posta doğrulanmamışsa
-          await _auth.signOut();
-          _showErrorSnackBar('E-posta adresinizi doğrulayın');
-        } else {
-          // Başarılı giriş
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
-        }
-      }
-    } on FirebaseAuthException catch (e) {
-      String errorMessage = 'Giriş başarısız';
-      switch (e.code) {
-        case 'user-not-found':
-          errorMessage = 'Kullanıcı bulunamadı';
-          break;
-        case 'wrong-password':
-          errorMessage = 'Hatalı şifre';
-          break;
-        case 'invalid-email':
-          errorMessage = 'Geçersiz e-posta adresi';
-          break;
-      }
-      _showErrorSnackBar(errorMessage);
-    } catch (e) {
-      _showErrorSnackBar('Bir hata oluştu');
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
-  void _showErrorSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: Colors.red,
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  @override
+    @override
   Widget build(BuildContext context) {
+    final viewModel = Provider.of<LoginViewModel>(context);
+
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -123,7 +59,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                   ),
                   const SizedBox(height: 32),
-
                   // E-posta TextField
                   TextFormField(
                     controller: emailController,
@@ -147,7 +82,6 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
                   const SizedBox(height: 16),
-
                   // Şifre TextField
                   TextFormField(
                     controller: passwordController,
@@ -182,16 +116,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     },
                   ),
                   const SizedBox(height: 8),
-
                   // Oturumu Açık Tut
                   Row(
                     children: [
                       Checkbox(
-                        value: _keepLoggedIn,
+                        value: viewModel.keepLoggedIn,
                         onChanged: (value) {
-                          setState(() {
-                            _keepLoggedIn = value ?? false;
-                          });
+                          viewModel.setKeepLoggedIn(value ?? false);
                         },
                         activeColor: Colors.cyan,
                       ),
@@ -202,9 +133,8 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
-
                   // Giriş Butonu
-                  _isLoading 
+                  viewModel.isLoading
                     ? const Center(
                         child: SpinKitChasingDots(
                           color: Colors.cyan,
@@ -212,7 +142,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       )
                     : ElevatedButton(
-                        onPressed: _login,
+                        onPressed: () {
+                            if (_formKey.currentState!.validate()) {
+                                viewModel.login(
+                                  context,
+                                  emailController.text.trim(),
+                                  passwordController.text.trim(),
+                                );
+                           }
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.cyan,
                           padding: const EdgeInsets.symmetric(vertical: 16),
@@ -225,6 +163,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
+                            color: Colors.black
                           ),
                         ),
                       ),

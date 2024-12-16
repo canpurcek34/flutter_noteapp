@@ -1,38 +1,12 @@
+// authpages/AuthScreen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_noteapp/viewmodels/auth_screen_viewmodel.dart';
 import 'package:lottie/lottie.dart';
+import 'package:provider/provider.dart';
 
-import 'LoginScreen.dart';
-import 'SignScreen.dart';
-
-class AuthScreen extends StatefulWidget {
+class AuthScreen extends StatelessWidget {
   const AuthScreen({super.key});
-
-  @override
-  _AuthScreenState createState() => _AuthScreenState();
-}
-
-class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-
-  @override
-  void initState() {
-    super.initState();
-    // Ekran geçişlerinde animasyon için controller
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 800),
-    );
-    
-    // Ekran yüklendiğinde animasyonu başlat
-    _animationController.forward();
-  }
-
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,6 +18,39 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
       systemNavigationBarIconBrightness: Brightness.dark,
     ));
 
+    return ChangeNotifierProvider(
+      create: (_) => AuthScreenViewModel(),
+      child: _AuthScreenContent(),
+    );
+  }
+}
+
+class _AuthScreenContent extends StatefulWidget {
+  @override
+  _AuthScreenContentState createState() => _AuthScreenContentState();
+}
+
+class _AuthScreenContentState extends State<_AuthScreenContent>  with SingleTickerProviderStateMixin {
+    late AnimationController _animationController;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+     _animationController.forward();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
+  }
+   @override
+  Widget build(BuildContext context) {
+      final viewModel = Provider.of<AuthScreenViewModel>(context);
     return Scaffold(
       body: SafeArea(
         child: Center(
@@ -70,9 +77,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                       controller: _animationController,
                     ),
                   ),
-                  
                   const SizedBox(height: 32),
-                  
                   // Başlık
                   Text(
                     'Hoş Geldiniz',
@@ -82,9 +87,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                           color: Theme.of(context).colorScheme.primary,
                         ),
                   ),
-                  
                   const SizedBox(height: 16),
-                  
                   // Alt Başlık
                   Text(
                     'Hesabınıza giriş yapın veya yeni bir hesap oluşturun.',
@@ -93,26 +96,22 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
                           color: Theme.of(context).colorScheme.secondary,
                         ),
                   ),
-                  
                   const SizedBox(height: 48),
-                  
                   // Giriş Yap Butonu
                   _buildAuthButton(
                     context,
                     text: 'Giriş Yap',
                     icon: Icons.login_rounded,
-                    onPressed: () => _navigateToLogin(context),
+                    onPressed: () => viewModel.navigateToLogin(context),
                     isPrimary: true,
                   ),
-                  
                   const SizedBox(height: 16),
-                  
                   // Kayıt Ol Butonu
                   _buildAuthButton(
                     context,
                     text: 'Kaydol',
                     icon: Icons.person_add_rounded,
-                    onPressed: () => _navigateToSignUp(context),
+                    onPressed: () => viewModel.navigateToSignUp(context),
                     isPrimary: false,
                   ),
                 ],
@@ -124,8 +123,7 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
     );
   }
 
-  // Özel Auth Butonu Widget'ı
-    Widget _buildAuthButton(
+   Widget _buildAuthButton(
     BuildContext context, {
     required String text,
     required IconData icon,
@@ -170,60 +168,4 @@ class _AuthScreenState extends State<AuthScreen> with SingleTickerProviderStateM
      ),
    );
   }
-
-
-  // Navigation Metotları
-  void _navigateToLogin(BuildContext context) {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const LoginScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(1.0, 0.0),
-              end: Offset.zero,
-            ).animate(animation),
-            child: child,
-          );
-        },
-      ),
-    );
-  }
-
-  void _navigateToSignUp(BuildContext context) {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const SignUpScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          return SlideTransition(
-            position: Tween<Offset>(
-              begin: const Offset(1.0, 0.0),
-              end: Offset.zero,
-            ).animate(animation),
-            child: child,
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ThemeData Örneği
-ThemeData authTheme() {
-  return ThemeData(
-    useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: Colors.deepPurple,
-      brightness: Brightness.light,
-    ),
-    typography: Typography.material2021(),
-    textTheme: TextTheme(
-      displaySmall: TextStyle(
-        color: Colors.deepPurple.shade700,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-  );
 }

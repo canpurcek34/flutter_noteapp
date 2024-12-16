@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_noteapp/widgets/list_card.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
-import 'ListCard.dart';
 
 class ListsTab extends StatelessWidget {
   static final Map<String, Color> colorNames = {
