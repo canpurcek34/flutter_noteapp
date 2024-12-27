@@ -6,105 +6,141 @@ import 'package:intl/intl.dart';
 class HomeViewModel extends ChangeNotifier {
   final AppService _appService = AppService();
   bool _isLoading = false;
+  bool _hasError = false;
+
+  static final Map<String, Color> colorNames = {
+    "red": Colors.red,
+    "blue": Colors.blue,
+    "green": Colors.green,
+    "yellow": Colors.yellow,
+    "orange": Colors.orange,
+    "grey": Colors.grey,
+    "purple": Colors.purple,
+    "cyan": Colors.cyan,
+    "white": Colors.white
+  };
+
+  static final DateFormat _primaryFormatter = DateFormat('d MMMM y HH:mm', 'tr_TR');
+  static final DateFormat _fallbackFormatter = DateFormat('yyyy-MM-dd HH:mm:ss');
 
   List<dynamic> _notes = [];
   List<dynamic> _lists = [];
 
-  List<dynamic> get notes => _notes;
-  List<dynamic> get lists => _lists;
+  List<dynamic> get notes => List.unmodifiable(_notes);
+  List<dynamic> get lists => List.unmodifiable(_lists);
 
   bool get isLoading => _isLoading;
+  bool get hasError => _hasError;
 
   String _errorMessage = '';
   String get errorMessage => _errorMessage;
 
-  Future<void> fetchNotes() async {
-    _isLoading = true;
+  void _setLoading(bool value) {
+    if (_isLoading != value) {
+      _isLoading = value;
+      notifyListeners();
+    }
+  }
+
+  void _setError(String message) {
+    _hasError = true;
+    _errorMessage = message;
     notifyListeners();
+  }
+
+  void _clearError() {
+    if (_hasError) {
+      _hasError = false;
+      _errorMessage = '';
+      notifyListeners();
+    }
+  }
+
+  Future<void> fetchNotes() async {
+    if (_isLoading) return;
+    
+    _setLoading(true);
+    _clearError();
+    
     try {
       final fetchedNotes = await _appService.fetchNotes();
-       _notes = fetchedNotes..sort((a, b) {
-           final DateTime dateA = _parseDate(a['date']);
-          final DateTime dateB = _parseDate(b['date']);
-         return dateB.compareTo(dateA);
-       });
+      _notes = fetchedNotes..sort((a, b) => _parseDate(b['date']).compareTo(_parseDate(a['date'])));
+      notifyListeners();
     } catch (e) {
-      _errorMessage = e.toString();
+      _setError(e.toString());
+    } finally {
+      _setLoading(false);
     }
-    _isLoading = false;
-    notifyListeners();
   }
 
   Future<void> fetchLists() async {
-    _isLoading = true;
-    notifyListeners();
+    if (_isLoading) return;
+    
+    _setLoading(true);
+    _clearError();
+    
     try {
       final fetchedLists = await _appService.fetchLists();
-       Map<String, Color> colorNames = {
-        "red": Colors.red,
-        "blue": Colors.blue,
-        "green": Colors.green,
-        "yellow": Colors.yellow,
-        "orange": Colors.orange,
-        "grey": Colors.grey,
-        "purple": Colors.purple,
-        "cyan": Colors.cyan,
-        "white": Colors.white
-      };
-
-      for (var colors in fetchedLists) {
-        String colorName = colors['color'] ?? 'white';
-        colors['flutterColor'] = colorNames[colorName] ?? Colors.white;
-      }
-        _lists = fetchedLists..sort((a, b) {
-          final DateTime dateA = _parseDate(a['date']);
-           final DateTime dateB = _parseDate(b['date']);
-         return dateB.compareTo(dateA);
-       });
+      _processListColors(fetchedLists);
+      _lists = fetchedLists..sort((a, b) => _parseDate(b['date']).compareTo(_parseDate(a['date'])));
+      notifyListeners();
     } catch (e) {
-      _errorMessage = e.toString();
+      _setError(e.toString());
+    } finally {
+      _setLoading(false);
     }
-    _isLoading = false;
-    notifyListeners();
   }
 
-   DateTime _parseDate(String dateString) {
-    try {
-        final formatter = DateFormat('d MMMM y HH:mm', 'tr_TR');
-        return formatter.parse(dateString);
-     } catch (e) {
-         final formatter = DateFormat('yyyy-MM-dd HH:mm:ss');
-        return formatter.parse(dateString);
-     }
+  void _processListColors(List<dynamic> lists) {
+    for (var item in lists) {
+      String colorName = item['color'] ?? 'white';
+      item['flutterColor'] = colorNames[colorName] ?? Colors.white;
     }
+  }
 
-  Future<void> updateCheckbox(String id, bool value) async {
+  Future<bool> updateCheckbox(String id, bool value) async {
+    _clearError();
     try {
       await _appService.updateCheckbox(id, value);
-      fetchLists();
-      notifyListeners();
+      await fetchLists();
+      return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _setError(e.toString());
+      return false;
     }
   }
 
-  Future<void> deleteNote(String id) async {
+  Future<bool> deleteNote(String id) async {
+    _clearError();
     try {
       await _appService.deleteNote(id);
-      fetchNotes();
+      _notes.removeWhere((note) => note['id'].toString() == id);
       notifyListeners();
+      return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _setError(e.toString());
+      return false;
     }
   }
 
-  Future<void> deleteList(String id) async {
+  Future<bool> deleteList(String id) async {
+    _clearError();
     try {
       await _appService.deleteList(id);
-      fetchLists();
+      _lists.removeWhere((list) => list['id'].toString() == id);
       notifyListeners();
+      return true;
     } catch (e) {
-      _errorMessage = e.toString();
+      _setError(e.toString());
+      return false;
+    }
+  }
+
+  DateTime _parseDate(String dateString) {
+    try {
+      return _primaryFormatter.parse(dateString);
+    } catch (e) {
+      return _fallbackFormatter.parse(dateString);
     }
   }
 }

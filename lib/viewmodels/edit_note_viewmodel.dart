@@ -8,53 +8,82 @@ import 'home_viewmodel.dart';
 class EditNoteViewModel extends ChangeNotifier {
   final AppService _appService = AppService();
   bool _isLoading = false;
+  bool _hasError = false;
 
-   bool get isLoading => _isLoading;
+  static final DateFormat _dateFormatter = DateFormat('d MMMM y HH:mm', 'tr_TR');
 
-   Future<void> updateNote(
-    BuildContext context,
-    String id,
-    String title,
-    String note,
-  ) async {
-        _isLoading = true;
-         notifyListeners();
-         try {
-            final now = DateTime.now();
-      final formattedDate = DateFormat('d MMMM y HH:mm', 'tr_TR').format(now);
-            await _appService.updateNote(id, title, note, formattedDate);
-             if(context.mounted)
-              {
-                 final homeViewModel = Provider.of<HomeViewModel>(context, listen: false);
-                   await homeViewModel.fetchNotes();
-                   Navigator.pop(context, true);
-                    ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                     content: const Text('Not güncellendi.'),
-                      backgroundColor: Colors.green.shade600,
-                       behavior: SnackBarBehavior.floating,
-                      duration: const Duration(seconds: 2),
-                   ),
-                 );
-            }
-       } catch (e) {
-            if(context.mounted)
-            {
-              _showErrorSnackBar(context, 'Bir hata oluştu: $e');
-           }
-       } finally {
-         _isLoading = false;
-          notifyListeners();
-       }
+  bool get isLoading => _isLoading;
+  bool get hasError => _hasError;
+
+  String _errorMessage = '';
+  String get errorMessage => _errorMessage;
+
+  void _setLoading(bool value) {
+    if (_isLoading != value) {
+      _isLoading = value;
+      notifyListeners();
     }
+  }
 
+  void _setError(String message) {
+    _hasError = true;
+    _errorMessage = message;
+    notifyListeners();
+  }
 
-     void _showErrorSnackBar(BuildContext context, String message) {
-         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(message),
-             behavior: SnackBarBehavior.floating,
-           ),
-        );
+  void _clearError() {
+    if (_hasError) {
+      _hasError = false;
+      _errorMessage = '';
+      notifyListeners();
     }
+  }
+
+  Future<bool> updateNote(BuildContext context, String id, String title, String note) async {
+    if (_isLoading) return false;
+    
+    _setLoading(true);
+    _clearError();
+
+    try {
+      final formattedDate = _dateFormatter.format(DateTime.now());
+      await _appService.updateNote(id, title, note, formattedDate);
+      
+      if (!context.mounted) return false;
+      
+      final homeViewModel = Provider.of<HomeViewModel>(context, listen: false);
+      await homeViewModel.fetchNotes();
+      
+      Navigator.pop(context, true);
+      _showSuccessMessage(context);
+      return true;
+    } catch (e) {
+      if (!context.mounted) return false;
+      _showErrorSnackBar(context, 'Bir hata oluştu: $e');
+      return false;
+    } finally {
+      _setLoading(false);
+    }
+  }
+
+  void _showSuccessMessage(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: const Text('Not güncellendi.'),
+        backgroundColor: Colors.green.shade600,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _showErrorSnackBar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
 }
