@@ -1,6 +1,6 @@
 //viewmodels/home_viewmodel.dart
 import 'package:flutter/material.dart';
-import '../service/AppService.dart';
+import '../service/app_service.dart';
 import 'package:intl/intl.dart';
 
 class HomeViewModel extends ChangeNotifier {
@@ -52,9 +52,9 @@ class HomeViewModel extends ChangeNotifier {
         "white": Colors.white
       };
 
-      for (var _colors in fetchedLists) {
-        String colorName = _colors['color'] ?? 'white';
-        _colors['flutterColor'] = colorNames[colorName] ?? Colors.white;
+      for (var colors in fetchedLists) {
+        String colorName = colors['color'] ?? 'white';
+        colors['flutterColor'] = colorNames[colorName] ?? Colors.white;
       }
         _lists = fetchedLists..sort((a, b) {
           final DateTime dateA = _parseDate(a['date']);

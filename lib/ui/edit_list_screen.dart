@@ -24,7 +24,7 @@ class _EditListScreenContent extends StatefulWidget {
   final Map<String, dynamic> list;
   final bool isDialog;
   const _EditListScreenContent(
-      {super.key, required this.list, this.isDialog = false});
+      {required this.list, this.isDialog = false});
 
   @override
   _EditListScreenContentState createState() => _EditListScreenContentState();

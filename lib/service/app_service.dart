@@ -299,7 +299,7 @@ class ColorService {
       final data = json.decode(response.body);
       return data['success'] == 1;
     } catch (e) {
-      print('Color update error: $e');
+      debugPrint('Color update error: $e');
       return false;
     }
   }

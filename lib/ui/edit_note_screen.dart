@@ -24,7 +24,7 @@ class _EditNoteScreenContent extends StatefulWidget {
   final Map<String, dynamic> note;
   final bool isDialog;
   const _EditNoteScreenContent(
-      {super.key, required this.note, this.isDialog = false});
+      {required this.note, this.isDialog = false});
 
   @override
   _EditNoteScreenContentState createState() => _EditNoteScreenContentState();

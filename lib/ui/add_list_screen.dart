@@ -20,7 +20,7 @@ class AddListScreen extends StatelessWidget {
 
 class _AddListScreenContent extends StatefulWidget {
   final bool isDialog;
-  const _AddListScreenContent({super.key, this.isDialog = false});
+  const _AddListScreenContent({this.isDialog = false});
 
   @override
   _AddListScreenContentState createState() => _AddListScreenContentState();

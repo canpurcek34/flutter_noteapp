@@ -1,6 +1,6 @@
 // viewmodels/edit_note_viewmodel.dart
 import 'package:flutter/material.dart';
-import '../service/AppService.dart';
+import '../service/app_service.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'home_viewmodel.dart';

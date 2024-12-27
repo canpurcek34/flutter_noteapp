@@ -20,7 +20,7 @@ class AddNoteScreen extends StatelessWidget {
 
 class _AddNoteScreenContent extends StatefulWidget {
   final bool isDialog;
-  const _AddNoteScreenContent({super.key, this.isDialog = false});
+  const _AddNoteScreenContent({this.isDialog = false});
 
   @override
   _AddNoteScreenContentState createState() => _AddNoteScreenContentState();

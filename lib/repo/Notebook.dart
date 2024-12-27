@@ -17,4 +17,4 @@ class Notebook {
         note: json['note'] as String,
         uuid: json['uuid'] as String);
   }
-}
+} 

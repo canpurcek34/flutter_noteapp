@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/scheduler.dart';
+import 'dart:ui';
 
 class ThemeProvider extends ChangeNotifier {
   ThemeData _currentTheme = ThemeData.light();
@@ -15,7 +15,7 @@ class ThemeProvider extends ChangeNotifier {
   bool get isDarkMode => _isDarkMode;
 
   Future<void> _initializeTheme() async {
-    final brightness = SchedulerBinding.instance.window.platformBrightness;
+    final brightness = PlatformDispatcher.instance.platformBrightness;
     _isDarkMode = brightness == Brightness.dark;
     await _loadTheme();
     _updateTheme();

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:flutter_noteapp/authpages/auth_screen.dart';
 import 'package:flutter_noteapp/provider/theme_provider.dart';
-import 'package:flutter_noteapp/service/AppService.dart';
+import 'package:flutter_noteapp/service/app_service.dart';
 import 'package:flutter_noteapp/ui/add_list_screen.dart';
 import 'package:flutter_noteapp/ui/add_note_screen.dart';
 import 'package:flutter_noteapp/ui/edit_list_screen.dart';
@@ -220,7 +220,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                 color: Provider.of<ThemeProvider>(context).currentTheme.brightness == Brightness.dark ? Colors.black87:Colors.black87,
               ),
               onTap: () async {
-                final result = await _showAddNoteDialog(context);
+                await _showAddNoteDialog(context);
                
               },
             ),
@@ -234,7 +234,7 @@ class _HomeScreenContentState extends State<_HomeScreenContent>
                      color: Provider.of<ThemeProvider>(context).currentTheme.brightness == Brightness.dark ? Colors.black87:Colors.black87
                   ),
                     onTap: () async {
-                 final result = await _showAddListDialog(context);
+                 await _showAddListDialog(context);
             },
             ),
           ],
